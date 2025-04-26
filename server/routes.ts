@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ZodError } from "zod";
@@ -19,15 +19,18 @@ import {
   getTopProducts, 
   getRecentOrders 
 } from "./api/analytics";
+import { setupAuth, hashPassword } from "./auth";
 
-// Create a mock user for demo
+// Create a demo user for testing
 async function createDemoUser() {
   try {
     const existingUser = await storage.getUserByEmail("demo@example.com");
     if (!existingUser) {
+      // Create demo user with hashed password
+      const hashedPassword = await hashPassword("demo123");
       await storage.createUser({
         username: "demo",
-        password: "demo123",
+        password: hashedPassword,
         email: "demo@example.com",
         fullName: "John Smith"
       });
@@ -38,58 +41,42 @@ async function createDemoUser() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication and get middleware
+  const { ensureAuthenticated } = setupAuth(app);
+  
   // Create a demo user for testing
   await createDemoUser();
-
-  // API Routes
-  // Auth routes
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
-    try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
-      }
-      
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // In a real app, you would use sessions and proper auth
-      res.status(200).json({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        fullName: user.fullName
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Server error during login" });
-    }
-  });
   
-  // Store connection routes
-  app.get("/api/store-connections", async (req: Request, res: Response) => {
+  // Protected Store connection routes
+  app.get("/api/store-connections", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.query.userId as string);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Valid userId is required" });
-      }
+      // Get user ID from authenticated user
+      const userId = (req.user as any).id;
       
       const connections = await storage.getStoreConnectionsByUserId(userId);
-      res.status(200).json(connections);
+      res.status(200).json({
+        success: true,
+        connections
+      });
     } catch (error) {
       console.error("Error fetching store connections:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ 
+        success: false, 
+        message: "Error fetching store connections" 
+      });
     }
   });
   
-  app.post("/api/store-connections", async (req: Request, res: Response) => {
+  app.post("/api/store-connections", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
-      const connectionData = insertStoreConnectionSchema.parse(req.body);
+      // Get user ID from the authenticated user's session
+      const userId = (req.user as any).id;
+      
+      // Parse and validate the data
+      const connectionData = insertStoreConnectionSchema.parse({
+        ...req.body,
+        userId // Add the user ID from the authenticated session
+      });
       
       // Test connection before saving
       let connectionValid = false;
@@ -108,17 +95,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!connectionValid) {
-        return res.status(400).json({ message: "Could not connect to store. Please check your credentials." });
+        return res.status(400).json({ 
+          success: false, 
+          message: "Could not connect to store. Please check your credentials." 
+        });
       }
       
       const connection = await storage.createStoreConnection(connectionData);
-      res.status(201).json(connection);
+      res.status(201).json({
+        success: true,
+        connection
+      });
     } catch (error) {
       if (error instanceof ZodError) {
-        return res.status(400).json({ message: fromZodError(error).message });
+        return res.status(400).json({ 
+          success: false, 
+          message: fromZodError(error).message 
+        });
       }
       console.error("Error creating store connection:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ 
+        success: false, 
+        message: "Error creating store connection" 
+      });
     }
   });
   

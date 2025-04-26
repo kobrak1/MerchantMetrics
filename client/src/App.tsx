@@ -3,45 +3,51 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
-import { useState, useEffect } from "react";
-import { apiRequest } from "./lib/queryClient";
+import AuthPage from "@/pages/auth-page";
+import { AuthProvider, useAuth } from "./hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
-function Router() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
-  useEffect(() => {
-    // For demo purposes, we'll simulate login
-    const loginUser = async () => {
-      try {
-        await apiRequest('POST', '/api/auth/login', {
-          username: 'demo',
-          password: 'demo123'
-        });
-        setIsLoggedIn(true);
-      } catch (error) {
-        console.error('Login failed:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loginUser();
-  }, []);
-  
+function ProtectedRoute({ 
+  path, 
+  component: Component 
+}: { 
+  path: string, 
+  component: React.ComponentType 
+}) {
+  const { user, isLoading } = useAuth();
+
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <Route path={path}>
+        <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      </Route>
     );
   }
-  
+
+  if (!user) {
+    return (
+      <Route path={path}>
+        <AuthPage />
+      </Route>
+    );
+  }
+
+  return (
+    <Route path={path}>
+      <Component />
+    </Route>
+  );
+}
+
+function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -50,10 +56,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
