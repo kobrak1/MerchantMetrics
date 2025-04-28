@@ -121,6 +121,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete a store connection
+  app.delete("/api/store-connections/:id", ensureAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      if (!userId) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "User not authenticated" 
+        });
+      }
+      
+      const connectionId = parseInt(req.params.id);
+      if (isNaN(connectionId)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid connection ID" 
+        });
+      }
+      
+      // Verify the connection belongs to the current user
+      const connection = await storage.getStoreConnection(connectionId);
+      if (!connection) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Store connection not found" 
+        });
+      }
+      
+      if (connection.userId !== userId) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "You are not authorized to delete this connection" 
+        });
+      }
+      
+      // Delete the connection
+      const success = await storage.deleteStoreConnection(connectionId);
+      
+      if (success) {
+        res.status(200).json({ 
+          success: true, 
+          message: "Store connection deleted successfully" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Failed to delete store connection" 
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting store connection:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error deleting store connection" 
+      });
+    }
+  });
+  
   // Analytics routes
   app.get("/api/analytics/kpi", async (req: Request, res: Response) => {
     try {

@@ -2,8 +2,32 @@ import { Button } from "@/components/ui/button";
 import { StoreConnection } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Menu, Plus, X, Package, Users, ShoppingCart, Home, Settings } from "lucide-react";
+import { 
+  Menu, 
+  Plus, 
+  X, 
+  Package, 
+  Users, 
+  ShoppingCart, 
+  Home, 
+  Settings,
+  Trash2,
+  AlertCircle
+} from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import { useStoreConnections } from "@/hooks/use-store-connection";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface SidebarProps {
   storeConnections: StoreConnection[];
@@ -27,9 +51,32 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { removeStoreConnection } = useStoreConnections();
+  const { toast } = useToast();
+  const [storeToRemove, setStoreToRemove] = useState<number | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   
   const toggleSidebar = () => {
     setIsExpanded(!isExpanded);
+  };
+  
+  const handleRemoveStore = async () => {
+    if (storeToRemove === null) return;
+    
+    try {
+      const result = await removeStoreConnection(storeToRemove);
+      if (result.success) {
+        setIsConfirmOpen(false);
+        setStoreToRemove(null);
+      }
+    } catch (error) {
+      console.error("Error removing store:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem removing the store. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -73,24 +120,77 @@ export default function Sidebar({
             <div 
               key={connection.id}
               className={cn(
-                "flex items-center mb-2 p-2 rounded cursor-pointer",
+                "group flex items-center justify-between mb-2 p-2 rounded",
                 "bg-primary bg-opacity-20 hover:bg-opacity-30",
                 activeConnectionId === connection.id && "bg-opacity-40"
               )}
-              onClick={() => onConnectionChange(connection.id)}
             >
               <div 
-                className={cn(
-                  "h-2 w-2 rounded-full mr-2",
-                  connection.isActive ? "bg-success" : "bg-destructive"
+                className="flex items-center cursor-pointer"
+                onClick={() => onConnectionChange(connection.id)}
+              >
+                <div 
+                  className={cn(
+                    "h-2 w-2 rounded-full mr-2",
+                    connection.isActive ? "bg-success" : "bg-destructive"
+                  )}
+                />
+                {isExpanded ? (
+                  <span className="text-sm truncate">{connection.name} ({connection.platform})</span>
+                ) : (
+                  <span className="text-xs font-bold">
+                    {connection.name.substring(0, 1)}
+                  </span>
                 )}
-              />
-              {isExpanded ? (
-                <span className="text-sm truncate">{connection.name} ({connection.platform})</span>
-              ) : (
-                <span className="text-xs font-bold">
-                  {connection.name.substring(0, 1)}
-                </span>
+              </div>
+              
+              {isExpanded && (
+                <AlertDialog 
+                  open={isConfirmOpen && storeToRemove === connection.id}
+                  onOpenChange={(open) => {
+                    setIsConfirmOpen(open);
+                    if (!open) setStoreToRemove(null);
+                  }}
+                >
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering the parent's onClick
+                        setStoreToRemove(connection.id);
+                        setIsConfirmOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="dark:bg-gray-800 dark:text-white">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                        Remove Store
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="dark:text-gray-300">
+                        Are you sure you want to remove <strong>{connection.name}</strong>? 
+                        This will disconnect your store and remove all associated data. 
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        className="bg-red-500 dark:bg-red-500 text-white hover:bg-red-600 dark:hover:bg-red-600"
+                        onClick={handleRemoveStore}
+                      >
+                        Remove Store
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           ))}
