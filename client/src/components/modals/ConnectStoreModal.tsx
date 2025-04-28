@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { HelpCircle, Info, X } from "lucide-react";
 import { SiShopify, SiMagento } from "react-icons/si";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ConnectStoreModalProps {
   isOpen: boolean;
@@ -107,6 +108,16 @@ export default function ConnectStoreModal({
             </Button>
           </div>
           
+          {selectedPlatform === "shopify" && (
+            <div className="bg-blue-50 p-3 rounded-md mb-4 text-sm text-blue-700 flex items-start">
+              <Info className="h-5 w-5 mr-2 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium mb-1">Shopify Connection Instructions:</p>
+                <p>For <strong>API Secret</strong>, please enter your Shopify Admin API access token, not your API secret key.</p>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="storeName">Store Name</Label>
@@ -129,7 +140,21 @@ export default function ConnectStoreModal({
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="apiKey">API Key</Label>
+              <div className="flex items-center">
+                <Label htmlFor="apiKey">API Key</Label>
+                {selectedPlatform === "shopify" && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 ml-1 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-60">For Shopify, this is your API key from your Shopify app</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
               <Input
                 id="apiKey"
                 placeholder="Enter your API key"
@@ -139,11 +164,29 @@ export default function ConnectStoreModal({
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="apiSecret">API Secret</Label>
+              <div className="flex items-center">
+                <Label htmlFor="apiSecret">
+                  {selectedPlatform === "shopify" ? "Admin API Access Token" : "API Secret"}
+                </Label>
+                {selectedPlatform === "shopify" && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 ml-1 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-60">This is your Admin API access token, used for authentication with Shopify API</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
               <Input
                 id="apiSecret"
                 type="password"
-                placeholder="Enter your API secret"
+                placeholder={selectedPlatform === "shopify" 
+                  ? "Enter your Admin API access token" 
+                  : "Enter your API secret"}
                 value={apiSecret}
                 onChange={(e) => setApiSecret(e.target.value)}
               />

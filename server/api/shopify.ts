@@ -45,7 +45,7 @@ async function makeShopifyRequest<T>(
   storeConnection: StoreConnection,
   endpoint: string,
 ): Promise<T> {
-  const { storeUrl, apiKey, apiSecret } = storeConnection;
+  const { storeUrl, apiKey, apiSecret: accessToken } = storeConnection;
   // Ensure storeUrl doesn't already contain the protocol and remove any trailing slashes
   const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
   const url = `https://${cleanStoreUrl}/admin/api/2025-01/${endpoint}`;
@@ -54,7 +54,8 @@ async function makeShopifyRequest<T>(
 
   const response = await fetch(url, {
     headers: {
-      "X-Shopify-Access-Token": apiSecret,
+      // Using the access token stored in apiSecret field for authentication
+      "X-Shopify-Access-Token": accessToken,
       "Content-Type": "application/json",
     },
   });
@@ -127,7 +128,7 @@ export async function fetchShopifyProducts(
 export async function testShopifyConnection(
   storeUrl: string,
   apiKey: string,
-  apiSecret: string,
+  accessToken: string, // This is actually the Admin API access token, not API secret
 ): Promise<boolean> {
   try {
     // Ensure storeUrl doesn't already contain the protocol and remove any trailing slashes
@@ -150,7 +151,8 @@ export async function testShopifyConnection(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'X-Shopify-Access-Token': apiSecret,
+        // Using the access token for authentication with Shopify Admin API
+        'X-Shopify-Access-Token': accessToken,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(query)
