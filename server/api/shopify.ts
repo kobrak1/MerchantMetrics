@@ -46,7 +46,11 @@ async function makeShopifyRequest<T>(
   endpoint: string
 ): Promise<T> {
   const { storeUrl, apiKey, apiSecret } = storeConnection;
-  const url = `https://${storeUrl}/admin/api/2024-01/${endpoint}`;
+  // Ensure storeUrl doesn't already contain the protocol
+  const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, '');
+  const url = `https://${cleanStoreUrl}/admin/api/2024-01/${endpoint}`;
+  
+  console.log(`Making Shopify request to: ${url}`);
   
   const response = await fetch(url, {
     headers: {
@@ -121,13 +125,22 @@ export async function testShopifyConnection(
   apiSecret: string
 ): Promise<boolean> {
   try {
-    const url = `https://${storeUrl}/admin/api/2024-01/shop.json`;
+    // Ensure storeUrl doesn't already contain the protocol
+    const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, '');
+    const url = `https://${cleanStoreUrl}/admin/api/2024-01/shop.json`;
+    
+    console.log(`Testing Shopify connection with URL: ${url}`);
+    
     const response = await fetch(url, {
       headers: {
         'X-Shopify-Access-Token': apiSecret,
         'Content-Type': 'application/json'
       }
     });
+    
+    if (!response.ok) {
+      console.error(`Shopify API responded with status: ${response.status} ${response.statusText}`);
+    }
     
     return response.ok;
   } catch (error) {

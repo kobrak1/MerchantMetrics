@@ -28,7 +28,11 @@ async function makeMagentoRequest<T>(
   endpoint: string
 ): Promise<T> {
   const { storeUrl, apiKey } = storeConnection;
-  const url = `https://${storeUrl}/rest/V1/${endpoint}`;
+  // Ensure storeUrl doesn't already contain the protocol
+  const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, '');
+  const url = `https://${cleanStoreUrl}/rest/V1/${endpoint}`;
+  
+  console.log(`Making Magento request to: ${url}`);
   
   const response = await fetch(url, {
     headers: {
@@ -99,13 +103,22 @@ export async function testMagentoConnection(
   apiKey: string
 ): Promise<boolean> {
   try {
-    const url = `https://${storeUrl}/rest/V1/store/storeConfigs`;
+    // Ensure storeUrl doesn't already contain the protocol
+    const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, '');
+    const url = `https://${cleanStoreUrl}/rest/V1/store/storeConfigs`;
+    
+    console.log(`Testing Magento connection with URL: ${url}`);
+    
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       }
     });
+    
+    if (!response.ok) {
+      console.error(`Magento API responded with status: ${response.status} ${response.statusText}`);
+    }
     
     return response.ok;
   } catch (error) {
