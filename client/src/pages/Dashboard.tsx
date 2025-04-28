@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDemoData } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { useStoreConnections } from "@/hooks/use-store-connection";
+import { useAuth } from "@/hooks/use-auth";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import DateFilter from "@/components/dashboard/DateFilter";
@@ -13,14 +14,11 @@ import RecentOrders from "@/components/dashboard/RecentOrders";
 import ConnectStoreModal from "@/components/modals/ConnectStoreModal";
 import { getInitials } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: demoData, isLoading } = useQuery({
-    queryKey: ['/api/demo-data'],
-    staleTime: Infinity
-  });
-  
   const { toast } = useToast();
+  const { user } = useAuth();
   const [dateFilter, setDateFilter] = useState("week");
   const [showConnectModal, setShowConnectModal] = useState(false);
   
@@ -28,8 +26,126 @@ export default function Dashboard() {
     storeConnections,
     activeConnectionId,
     setActiveConnectionId,
-    addStoreConnection
+    addStoreConnection,
+    isLoading: storeConnectionsLoading
   } = useStoreConnections();
+  
+  // Query for KPI data for the active connection
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['/api/analytics/kpi', activeConnectionId],
+    queryFn: async () => {
+      if (!activeConnectionId) return { 
+        kpiData: { 
+          dailyRevenue: 0, 
+          totalOrders: 0, 
+          repeatBuyerRate: 0,
+          inventoryAlerts: []
+        }
+      };
+      
+      try {
+        const res = await apiRequest('GET', `/api/analytics/kpi?connectionId=${activeConnectionId}`);
+        return res.json();
+      } catch (error) {
+        console.error('Failed to fetch KPI data:', error);
+        return { 
+          kpiData: { 
+            dailyRevenue: 0, 
+            totalOrders: 0, 
+            repeatBuyerRate: 0,
+            inventoryAlerts: []
+          }
+        };
+      }
+    },
+    enabled: !!activeConnectionId,
+    staleTime: 60000 // 1 minute
+  });
+  
+  // Query for store performance data
+  const { data: performanceData, isLoading: performanceLoading } = useQuery({
+    queryKey: ['/api/analytics/store-performance', activeConnectionId, dateFilter],
+    queryFn: async () => {
+      if (!activeConnectionId) return { 
+        storePerformance: {
+          labels: [],
+          datasets: []
+        }
+      };
+      
+      try {
+        const res = await apiRequest('GET', `/api/analytics/store-performance?connectionId=${activeConnectionId}&period=${dateFilter}`);
+        return res.json();
+      } catch (error) {
+        console.error('Failed to fetch performance data:', error);
+        return { 
+          storePerformance: {
+            labels: [],
+            datasets: []
+          }
+        };
+      }
+    },
+    enabled: !!activeConnectionId,
+    staleTime: 60000 // 1 minute
+  });
+  
+  // Query for top products
+  const { data: productsData, isLoading: productsLoading } = useQuery({
+    queryKey: ['/api/analytics/top-products', activeConnectionId],
+    queryFn: async () => {
+      if (!activeConnectionId) return { topProducts: [] };
+      
+      try {
+        const res = await apiRequest('GET', `/api/analytics/top-products?connectionId=${activeConnectionId}`);
+        return res.json();
+      } catch (error) {
+        console.error('Failed to fetch top products:', error);
+        return { topProducts: [] };
+      }
+    },
+    enabled: !!activeConnectionId,
+    staleTime: 60000 // 1 minute
+  });
+  
+  // Query for recent orders
+  const { data: ordersData, isLoading: ordersLoading } = useQuery({
+    queryKey: ['/api/analytics/recent-orders', activeConnectionId],
+    queryFn: async () => {
+      if (!activeConnectionId) return { recentOrders: [] };
+      
+      try {
+        const res = await apiRequest('GET', `/api/analytics/recent-orders?connectionId=${activeConnectionId}`);
+        return res.json();
+      } catch (error) {
+        console.error('Failed to fetch recent orders:', error);
+        return { recentOrders: [] };
+      }
+    },
+    enabled: !!activeConnectionId,
+    staleTime: 60000 // 1 minute
+  });
+  
+  // Query for user subscription
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['/api/user-subscription'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/user-subscription');
+        return res.json();
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+        return { 
+          subscription: {
+            tier: { name: 'Free', maxOrders: 100 },
+            usage: { orders: 0, percentUsed: 0 }
+          }
+        };
+      }
+    },
+    enabled: !!user,
+    staleTime: 60000 // 1 minute
+  });
   
   const handleDateFilterChange = (filter: string) => {
     setDateFilter(filter);
@@ -44,6 +160,7 @@ export default function Dashboard() {
           title: "Store connected successfully",
           description: `${connectionData.name} has been connected to your account.`,
         });
+        setShowConnectModal(false);
       }
       
       return result;
@@ -55,22 +172,42 @@ export default function Dashboard() {
   
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
+  const isLoading = storeConnectionsLoading || analyticsLoading || performanceLoading || 
+                    productsLoading || ordersLoading || subscriptionLoading;
+  
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-sm text-muted-foreground">Loading dashboard data...</p>
+        </div>
       </div>
     );
   }
   
-  const {
-    kpiData,
-    storePerformance,
-    topProducts,
-    recentOrders,
-    user,
-    subscription
-  } = demoData;
+  // Default empty data structures if no connections exist
+  const kpiData = analyticsData?.kpiData || {
+    dailyRevenue: 0,
+    totalOrders: 0,
+    repeatBuyerRate: 0,
+    inventoryAlerts: []
+  };
+  
+  const storePerformance = performanceData?.storePerformance || {
+    labels: [],
+    datasets: []
+  };
+  
+  const topProducts = productsData?.topProducts || [];
+  const recentOrders = ordersData?.recentOrders || [];
+  
+  const subscription = subscriptionData?.subscription || {
+    tier: { name: 'Free', maxOrders: 100 },
+    usage: { orders: 0, percentUsed: 0 }
+  };
+  
+  const noStoreConnected = storeConnections.length === 0;
   
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-100">
@@ -94,87 +231,110 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Dashboard" 
-          userName={user.fullName} 
-          userInitials={getInitials(user.fullName)}
+          userName={user?.fullName || user?.username} 
+          userInitials={getInitials(user?.fullName || user?.username || '')}
           onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
         
         <main className="flex-1 overflow-y-auto p-4">
-          <DateFilter onFilterChange={handleDateFilterChange} />
-          
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <KPICard 
-              title="Daily Revenue" 
-              value={kpiData.dailyRevenue}
-              percentageChange={12.5}
-              type="currency"
-              chartType="line"
-              chartData={{
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                  label: 'Daily Revenue',
-                  data: [1880, 2150, 1950, 2420, 2854, 2650, 2400]
-                }]
-              }}
-            />
-            
-            <KPICard 
-              title="Total Orders" 
-              value={kpiData.totalOrders}
-              percentageChange={8.2}
-              chartType="bar"
-              chartData={{
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                  label: 'Orders',
-                  data: [92, 104, 86, 112, 147, 135, 128]
-                }]
-              }}
-            />
-            
-            <KPICard 
-              title="Repeat Buyer Rate" 
-              value={kpiData.repeatBuyerRate}
-              percentageChange={-2.1}
-              type="percentage"
-              chartData={{
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                  label: 'Repeat Buyer Rate',
-                  data: [42, 40, 39, 38, 38.6, 37, 36],
-                  borderColor: '#f44336',
-                  backgroundColor: 'rgba(244, 67, 54, 0.1)'
-                }]
-              }}
-            />
-            
-            <KPICard 
-              title="Inventory Alerts" 
-              value={kpiData.inventoryAlerts.length}
-            >
-              {kpiData.inventoryAlerts.map((alert) => (
-                <InventoryAlert 
-                  key={alert.id}
-                  name={alert.name}
-                  inventory={alert.inventory}
-                  status={alert.status}
+          {noStoreConnected ? (
+            <div className="h-full flex flex-col items-center justify-center">
+              <div className="max-w-md text-center">
+                <h2 className="text-2xl font-bold mb-4">Connect your first store</h2>
+                <p className="text-gray-600 mb-6">
+                  To start seeing your store analytics, you need to connect your e-commerce store.
+                </p>
+                <button 
+                  onClick={() => setShowConnectModal(true)}
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition"
+                >
+                  Connect Store
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <DateFilter onFilterChange={handleDateFilterChange} />
+              
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <KPICard 
+                  title="Daily Revenue" 
+                  value={kpiData.dailyRevenue}
+                  percentageChange={0}
+                  type="currency"
+                  chartType="line"
+                  chartData={{
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                      label: 'Daily Revenue',
+                      data: [0, 0, 0, 0, 0, 0, 0] // This would be replaced with actual data
+                    }]
+                  }}
                 />
-              ))}
-            </KPICard>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <StorePerformance data={storePerformance} />
-            </div>
-            
-            <div>
-              <TopProducts products={topProducts} />
-            </div>
-          </div>
-          
-          <RecentOrders orders={recentOrders} />
+                
+                <KPICard 
+                  title="Total Orders" 
+                  value={kpiData.totalOrders}
+                  percentageChange={0}
+                  chartType="bar"
+                  chartData={{
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                      label: 'Orders',
+                      data: [0, 0, 0, 0, 0, 0, 0] // This would be replaced with actual data
+                    }]
+                  }}
+                />
+                
+                <KPICard 
+                  title="Repeat Buyer Rate" 
+                  value={kpiData.repeatBuyerRate}
+                  percentageChange={0}
+                  type="percentage"
+                  chartData={{
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                      label: 'Repeat Buyer Rate',
+                      data: [0, 0, 0, 0, 0, 0, 0], // This would be replaced with actual data
+                      borderColor: '#f44336',
+                      backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                    }]
+                  }}
+                />
+                
+                <KPICard 
+                  title="Inventory Alerts" 
+                  value={kpiData.inventoryAlerts?.length || 0}
+                >
+                  {kpiData.inventoryAlerts && kpiData.inventoryAlerts.length > 0 ? (
+                    kpiData.inventoryAlerts.map((alert) => (
+                      <InventoryAlert 
+                        key={alert.id}
+                        name={alert.name}
+                        inventory={alert.inventory}
+                        status={alert.status}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 p-2">No inventory alerts.</p>
+                  )}
+                </KPICard>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
+                  <StorePerformance data={storePerformance} />
+                </div>
+                
+                <div>
+                  <TopProducts products={topProducts} />
+                </div>
+              </div>
+              
+              <RecentOrders orders={recentOrders} />
+            </>
+          )}
         </main>
       </div>
       

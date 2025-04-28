@@ -54,11 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (data) => {
       if (data.success) {
-        queryClient.setQueryData(["/api/user"], data.user);
+        queryClient.setQueryData(["/api/user"], data);
         toast({
           title: "Login successful",
           description: `Welcome back, ${data.user.fullName || data.user.username}!`,
         });
+        
+        // Force navigation to home page by refreshing all data instead of relying on Redirect
+        window.location.href = "/";
       } else {
         throw new Error(data.message || "Login failed");
       }
@@ -79,11 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (data) => {
       if (data.success) {
-        queryClient.setQueryData(["/api/user"], data.user);
+        queryClient.setQueryData(["/api/user"], data);
         toast({
           title: "Registration successful",
           description: `Welcome to ShopMetrics, ${data.user.fullName || data.user.username}!`,
         });
+        
+        // Force navigation to home page
+        window.location.href = "/";
       } else {
         throw new Error(data.message || "Registration failed");
       }

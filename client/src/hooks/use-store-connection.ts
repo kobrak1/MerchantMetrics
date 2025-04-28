@@ -1,32 +1,48 @@
 import { useState, useEffect } from "react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { StoreConnection } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDemoData } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export function useStoreConnections() {
   const [isLoading, setIsLoading] = useState(true);
   const [storeConnections, setStoreConnections] = useState<StoreConnection[]>([]);
   const [activeConnectionId, setActiveConnectionId] = useState<number | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
   
-  const { data: demoData, isLoading: isDemoLoading } = useQuery({
-    queryKey: ['/api/demo-data'],
-    staleTime: Infinity
+  // Fetch the user's store connections from the API
+  const { data: connectionsData, isLoading: isConnectionsLoading } = useQuery({
+    queryKey: ['/api/store-connections'],
+    queryFn: async () => {
+      if (!user) return { connections: [] };
+      
+      try {
+        const res = await apiRequest('GET', '/api/store-connections');
+        return await res.json();
+      } catch (error) {
+        console.error('Failed to fetch store connections:', error);
+        return { connections: [] };
+      }
+    },
+    enabled: !!user,
+    staleTime: 60000 // 1 minute
   });
   
   useEffect(() => {
-    if (demoData && demoData.storeConnections) {
-      setStoreConnections(demoData.storeConnections);
+    if (connectionsData && connectionsData.connections) {
+      setStoreConnections(connectionsData.connections);
       // Set the first active connection as the default
-      const activeConnection = demoData.storeConnections.find((conn: StoreConnection) => conn.isActive);
+      const activeConnection = connectionsData.connections.find((conn: StoreConnection) => conn.isActive);
       if (activeConnection) {
         setActiveConnectionId(activeConnection.id);
-      } else if (demoData.storeConnections.length > 0) {
-        setActiveConnectionId(demoData.storeConnections[0].id);
+      } else if (connectionsData.connections.length > 0) {
+        setActiveConnectionId(connectionsData.connections[0].id);
       }
       setIsLoading(false);
     }
-  }, [demoData]);
+  }, [connectionsData]);
   
   const getActiveConnection = () => {
     if (!activeConnectionId) return null;
@@ -41,28 +57,52 @@ export function useStoreConnections() {
     apiSecret: string;
   }) => {
     try {
-      const userId = demoData?.user?.id || 1;
-      const response = await apiRequest('POST', '/api/store-connections', {
-        ...connectionData,
-        userId
-      });
+      const response = await apiRequest('POST', '/api/store-connections', connectionData);
       
-      const newConnection = await response.json();
-      setStoreConnections(prev => [...prev, newConnection]);
-      
-      if (!activeConnectionId) {
-        setActiveConnectionId(newConnection.id);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to connect store');
       }
       
-      return { success: true, data: newConnection };
-    } catch (error) {
+      const result = await response.json();
+      
+      if (result.success && result.connection) {
+        // Add the new connection to the state
+        const newConnection = result.connection;
+        setStoreConnections(prev => [...prev, newConnection]);
+        
+        // If this is the first connection, make it active
+        if (!activeConnectionId) {
+          setActiveConnectionId(newConnection.id);
+        }
+        
+        // Invalidate the store connections query to refetch
+        queryClient.invalidateQueries({ queryKey: ['/api/store-connections'] });
+        
+        toast({
+          title: "Success",
+          description: `Successfully connected ${connectionData.name}.`,
+        });
+        
+        return { success: true, data: newConnection };
+      } else {
+        throw new Error(result.message || 'Failed to connect store');
+      }
+    } catch (error: any) {
       console.error('Failed to add store connection:', error);
+      
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Could not connect to store. Please check your credentials.",
+        variant: "destructive"
+      });
+      
       return { success: false, error };
     }
   };
   
   return {
-    isLoading: isLoading || isDemoLoading,
+    isLoading: isLoading || isConnectionsLoading,
     storeConnections,
     activeConnectionId,
     setActiveConnectionId,
