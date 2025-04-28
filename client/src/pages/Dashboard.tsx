@@ -210,7 +210,7 @@ export default function Dashboard() {
   const noStoreConnected = storeConnections.length === 0;
   
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-100">
+    <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
       {/* Sidebar */}
       <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
         <Sidebar 
@@ -231,8 +231,8 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Dashboard" 
-          userName={user?.fullName || user?.username} 
-          userInitials={getInitials(user?.fullName || user?.username || '')}
+          userName={user?.fullName || user?.username || "User"} 
+          userInitials={getInitials(user?.fullName || user?.username || "User")}
           onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
         
@@ -240,8 +240,8 @@ export default function Dashboard() {
           {noStoreConnected ? (
             <div className="h-full flex flex-col items-center justify-center">
               <div className="max-w-md text-center">
-                <h2 className="text-2xl font-bold mb-4">Connect your first store</h2>
-                <p className="text-gray-600 mb-6">
+                <h2 className="text-2xl font-bold mb-4 dark:text-white">Connect your first store</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
                   To start seeing your store analytics, you need to connect your e-commerce store.
                 </p>
                 <button 
@@ -308,7 +308,12 @@ export default function Dashboard() {
                   value={kpiData.inventoryAlerts?.length || 0}
                 >
                   {kpiData.inventoryAlerts && kpiData.inventoryAlerts.length > 0 ? (
-                    kpiData.inventoryAlerts.map((alert) => (
+                    kpiData.inventoryAlerts.map((alert: { 
+                      id: number; 
+                      name: string; 
+                      inventory: number; 
+                      status: string;
+                    }) => (
                       <InventoryAlert 
                         key={alert.id}
                         name={alert.name}
@@ -317,7 +322,7 @@ export default function Dashboard() {
                       />
                     ))
                   ) : (
-                    <p className="text-sm text-gray-500 p-2">No inventory alerts.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 p-2">No inventory alerts.</p>
                   )}
                 </KPICard>
               </div>

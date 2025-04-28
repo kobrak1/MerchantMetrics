@@ -101,12 +101,59 @@ export function useStoreConnections() {
     }
   };
   
+  const removeStoreConnection = async (connectionId: number) => {
+    try {
+      // First, ensure we're not trying to remove the active connection
+      if (connectionId === activeConnectionId) {
+        // Find another connection to make active
+        const otherConnection = storeConnections.find(conn => conn.id !== connectionId);
+        if (otherConnection) {
+          setActiveConnectionId(otherConnection.id);
+        } else {
+          setActiveConnectionId(null);
+        }
+      }
+      
+      const response = await apiRequest('DELETE', `/api/store-connections/${connectionId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove store');
+      }
+      
+      // Remove the connection from local state
+      setStoreConnections(prev => prev.filter(conn => conn.id !== connectionId));
+      
+      // Invalidate the store connections query to refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/store-connections'] });
+      
+      toast({
+        title: "Store Removed",
+        description: "The store has been successfully disconnected.",
+      });
+      
+      return { success: true };
+      
+    } catch (error: any) {
+      console.error('Failed to remove store connection:', error);
+      
+      toast({
+        title: "Removal Failed",
+        description: error.message || "Could not remove store connection.",
+        variant: "destructive"
+      });
+      
+      return { success: false, error };
+    }
+  };
+  
   return {
     isLoading: isLoading || isConnectionsLoading,
     storeConnections,
     activeConnectionId,
     setActiveConnectionId,
     getActiveConnection,
-    addStoreConnection
+    addStoreConnection,
+    removeStoreConnection
   };
 }
