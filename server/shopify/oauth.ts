@@ -13,11 +13,7 @@ declare global {
       shopifyShop?: string;
       shopifyTopic?: string;
     }
-    interface SessionData {
-      shopifyOAuthState?: string;
-      shopifyOAuthShop?: string;
-      userId?: number;
-    }
+    // SessionData is already defined in auth.ts, so we don't redefine it here
   }
 }
 
@@ -102,9 +98,12 @@ export function beginOAuth(req: Request, res: Response) {
     const state = generateNonce();
     
     // Store the state in session to validate on callback
-    req.session.shopifyOAuthState = state;
-    req.session.shopifyOAuthShop = shop;
-    req.session.userId = userId;
+    if (!req.session) {
+      req.session = {} as any;
+    }
+    (req.session as any).shopifyOAuthState = state;
+    (req.session as any).shopifyOAuthShop = shop;
+    (req.session as any).userId = userId;
     
     // Generate OAuth URL
     const redirectUrl = `/api/shopify/oauth/callback`;
@@ -127,9 +126,9 @@ export async function completeOAuth(req: Request, res: Response) {
   try {
     // Validate state to prevent CSRF
     const { state, shop, code } = req.query as { state: string, shop: string, code: string };
-    const storedState = req.session.shopifyOAuthState;
-    const storedShop = req.session.shopifyOAuthShop;
-    const userId = req.session.userId;
+    const storedState = (req.session as any).shopifyOAuthState;
+    const storedShop = (req.session as any).shopifyOAuthShop;
+    const userId = (req.session as any).userId;
     
     if (!storedState || !storedShop || state !== storedState || shop !== storedShop || !userId) {
       return res.status(400).json({ 
@@ -227,8 +226,8 @@ export async function completeOAuth(req: Request, res: Response) {
     });
     
     // Clean up session
-    delete req.session.shopifyOAuthState;
-    delete req.session.shopifyOAuthShop;
+    delete (req.session as any).shopifyOAuthState;
+    delete (req.session as any).shopifyOAuthShop;
     
     // Return success with connection details
     return res.status(201).json({ 
