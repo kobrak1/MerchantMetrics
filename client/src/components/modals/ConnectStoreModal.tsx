@@ -60,6 +60,7 @@ export default function ConnectStoreModal({
         
         if (!result.success) {
           setError(result.error?.message || "Failed to start Shopify authorization. Please try again.");
+          setIsLoading(false); // Make sure to set loading to false on error
         }
         // Don't close modal or reset yet - the redirect will happen from the OAuth flow
       } catch (err) {

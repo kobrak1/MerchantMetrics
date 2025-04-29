@@ -103,12 +103,8 @@ export function beginOAuth(req: Request, res: Response) {
     
     // Generate OAuth URL
     const redirectUrl = `/api/shopify/oauth/callback`;
-    const authUrl = shopify.auth.beginAuth({
-      shop,
-      callbackPath: redirectUrl,
-      isOnline: false, // Use offline access to get a refresh token
-      state,
-    });
+    // Shopify API v11 uses different auth method
+    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${encodeURIComponent(`https://${process.env.SHOPIFY_HOST}${redirectUrl}`)}&state=${state}`;
     
     // Redirect to Shopify OAuth page
     res.status(200).json({ success: true, url: authUrl });
@@ -138,24 +134,50 @@ export async function completeOAuth(req: Request, res: Response) {
     }
     
     // Complete OAuth to get access token
-    const callbackResponse = await shopify.auth.validateAuthCallback({
-      rawRequest: req,
-      rawResponse: res,
-      query: { code, shop, state },
+    // Using direct API call instead of shopify SDK
+    const accessTokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: process.env.SHOPIFY_API_KEY,
+        client_secret: process.env.SHOPIFY_API_SECRET,
+        code
+      })
     });
     
-    const { accessToken, scope } = callbackResponse.session;
+    if (!accessTokenResponse.ok) {
+      throw new Error('Failed to get access token from Shopify');
+    }
     
-    // Get shop details from Shopify
-    const client = new shopify.clients.Rest({
-      session: callbackResponse.session,
+    const tokenData = await accessTokenResponse.json();
+    const accessToken = tokenData.access_token;
+    const scope = tokenData.scope;
+    
+    // Get shop details from Shopify using direct GraphQL API
+    const shopGraphQLResponse = await fetch(`https://${shop}/admin/api/2024-01/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken
+      },
+      body: JSON.stringify({
+        query: `{
+          shop {
+            id
+            name
+          }
+        }`
+      })
     });
     
-    const shopData = await client.get({
-      path: 'shop',
-    });
+    if (!shopGraphQLResponse.ok) {
+      throw new Error('Failed to get shop details from Shopify');
+    }
     
-    const shopInfo = shopData.body.shop as any;
+    const shopData = await shopGraphQLResponse.json();
+    const shopInfo = shopData.data.shop;
     const shopId = shopInfo.id.toString();
     const shopName = shopInfo.name;
     

@@ -286,10 +286,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/user-subscription", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.query.userId as string);
+      // Use authenticated user's ID instead of query parameter
+      const userId = (req.user as any)?.id;
       
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Valid userId is required" });
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
       }
       
       const subscription = await storage.getUserSubscription(userId);
