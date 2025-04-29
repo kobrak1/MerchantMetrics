@@ -1,5 +1,6 @@
 import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-10';
+import '@shopify/shopify-api/adapters/node'; // Required for Node.js runtime
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';

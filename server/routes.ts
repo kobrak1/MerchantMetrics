@@ -20,6 +20,9 @@ import {
   getRecentOrders 
 } from "./api/analytics";
 import { setupAuth, hashPassword } from "./auth";
+import { beginOAuth, completeOAuth, validateShopifyWebhook } from "./shopify/oauth";
+import { trackApiUsage, enforcePlanLimits } from "./middleware/limits";
+import { trackUserSession, expireInactiveSessions } from "./middleware/session-tracker";
 
 // Create a demo user for testing
 async function createDemoUser() {
@@ -199,6 +202,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/analytics/store-performance", async (req: Request, res: Response) => {
     try {
+      // Check if storeConnectionIds query param is provided
+      if (!req.query.storeConnectionIds) {
+        return res.status(400).json({ message: "storeConnectionIds parameter is required" });
+      }
+      
       const storeConnectionIds = (req.query.storeConnectionIds as string)
         .split(',')
         .map(id => parseInt(id));
@@ -572,6 +580,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching demo data:", error);
       res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Apply API usage tracking middleware to all authenticated routes
+  app.use(trackApiUsage);
+  
+  // Apply user session tracking for authenticated users
+  app.use(trackUserSession);
+  
+  // Apply plan limits enforcement
+  app.use(enforcePlanLimits);
+  
+  // Shopify OAuth routes
+  app.get("/api/shopify/oauth/begin", ensureAuthenticated, (req: Request, res: Response) => {
+    beginOAuth(req, res);
+  });
+  
+  app.get("/api/shopify/oauth/callback", (req: Request, res: Response) => {
+    completeOAuth(req, res);
+  });
+  
+  // Shopify webhooks endpoint
+  app.post("/api/shopify/webhooks", validateShopifyWebhook, async (req: Request, res: Response) => {
+    const topic = req.shopifyTopic;
+    const shop = req.shopifyShop;
+    
+    if (!topic || !shop) {
+      return res.status(400).json({ success: false, message: "Missing topic or shop" });
+    }
+    
+    try {
+      console.log(`Received webhook: ${topic} from ${shop}`);
+      
+      // Get the store connection for this shop
+      const connection = await storage.getStoreConnectionByShopId(shop);
+      
+      if (!connection) {
+        return res.status(404).json({ success: false, message: "Store connection not found" });
+      }
+      
+      // Update the last webhook timestamp
+      await storage.updateStoreConnection(connection.id, {
+        lastWebhookAt: new Date()
+      });
+      
+      // Handle different webhook topics
+      switch (topic) {
+        case 'orders/create':
+          // Process new order
+          console.log('New order created:', req.body);
+          
+          // Update order count for this store
+          await storage.updateStoreConnection(connection.id, {
+            totalOrdersProcessed: (connection.totalOrdersProcessed || 0) + 1
+          });
+          
+          break;
+        
+        case 'products/update':
+          // Process product update
+          console.log('Product updated:', req.body);
+          break;
+        
+        // Add more webhook handlers as needed
+        
+        default:
+          console.log(`Unhandled webhook topic: ${topic}`);
+      }
+      
+      // Shopify expects a 200 response quickly to acknowledge receipt
+      res.status(200).send();
+    } catch (error) {
+      console.error(`Error processing webhook ${topic} from ${shop}:`, error);
+      res.status(500).json({ success: false, message: "Error processing webhook" });
     }
   });
 
