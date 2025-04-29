@@ -5,11 +5,19 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User } from "@shared/schema";
+import { User as UserModel } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Extend Express.User interface with our User model
+    interface User extends UserModel {}
+    
+    // Add custom session data properties
+    interface SessionData {
+      shopifyOAuthState?: string;
+      shopifyOAuthShop?: string;
+      userId?: number;
+    }
   }
 }
 
@@ -156,7 +164,7 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("local", (err: Error, user: User, info: { message: string }) => {
+    passport.authenticate("local", (err: Error, user: UserModel, info: { message: string }) => {
       if (err) return next(err);
       
       if (!user) {
@@ -208,7 +216,7 @@ export function setupAuth(app: Express) {
       });
     }
     
-    const user = req.user as User;
+    const user = req.user as UserModel;
     
     res.json({
       success: true,

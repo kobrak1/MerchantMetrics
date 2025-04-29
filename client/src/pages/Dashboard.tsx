@@ -212,7 +212,7 @@ export default function Dashboard() {
   const topProducts = productsData?.topProducts || [];
   const recentOrders = ordersData?.recentOrders || [];
   
-  const subscription = subscriptionData?.subscription || {
+  const subscription = subscriptionData || {
     tier: { name: 'Free', maxOrders: 100 },
     usage: { orders: 0, percentUsed: 0 }
   };
@@ -328,7 +328,7 @@ export default function Dashboard() {
                         key={alert.id}
                         name={alert.name}
                         inventory={alert.inventory}
-                        status={alert.status}
+                        status={alert.status as "OUT_OF_STOCK" | "LOW_STOCK"}
                       />
                     ))
                   ) : (

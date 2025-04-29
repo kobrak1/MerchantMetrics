@@ -13,6 +13,11 @@ declare global {
       shopifyShop?: string;
       shopifyTopic?: string;
     }
+    interface SessionData {
+      shopifyOAuthState?: string;
+      shopifyOAuthShop?: string;
+      userId?: number;
+    }
   }
 }
 
