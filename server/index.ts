@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { runMigrations } from "./migration";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  try {
+    // Run migrations before registering routes
+    await runMigrations();
+  } catch (error) {
+    console.error("Failed to run migrations:", error);
+    // Continue with the application startup even if migrations fail
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
