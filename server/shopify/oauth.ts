@@ -106,13 +106,14 @@ export function beginOAuth(req: Request, res: Response) {
     (req.session as any).userId = userId;
     
     // Generate OAuth URL - remove leading slash to avoid double slash in the final URL
-    const redirectUrl = `api/shopify/oauth/callback`;
+    const redirectPath = `api/shopify/oauth/callback`;
     
-    // Extract host without protocol to avoid duplication
-    const hostWithoutProtocol = process.env.SHOPIFY_HOST!.replace(/^https?:\/\//, '');
+    // Extract host without protocol to avoid duplication and ensure no trailing slash
+    let hostWithoutProtocol = process.env.SHOPIFY_HOST!.replace(/^https?:\/\//, '');
+    hostWithoutProtocol = hostWithoutProtocol.replace(/\/+$/, ''); // Remove any trailing slashes
     
-    // Full redirect URL to use in the OAuth flow
-    const fullRedirectUrl = `https://${hostWithoutProtocol}/${redirectUrl}`;
+    // Full redirect URL to use in the OAuth flow with proper formatting
+    const fullRedirectUrl = `https://${hostWithoutProtocol}/${redirectPath}`;
     console.log('Shopify OAuth redirect URL:', fullRedirectUrl);
     
     // Shopify API v11 uses different auth method
