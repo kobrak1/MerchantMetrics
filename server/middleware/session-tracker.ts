@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
 import { db } from '../db';
 import { userSessions } from '@shared/schema';
+import { eq, and, lt } from 'drizzle-orm';
 
 /**
  * Middleware to track user sessions and detect suspicious activity
@@ -80,10 +81,10 @@ export async function expireInactiveSessions(req: Request, res: Response, next: 
     // Find inactive sessions
     const inactiveSessions = await db.select()
       .from(userSessions)
-      .where(session => 
-        session.isActive.equals(true)
-        .and(session.lastActivityAt.lte(expirationDate))
-      );
+      .where(and(
+        eq(userSessions.isActive, true),
+        lt(userSessions.lastActivityAt, expirationDate)
+      ));
     
     // Mark sessions as expired
     for (const session of inactiveSessions) {
@@ -92,7 +93,7 @@ export async function expireInactiveSessions(req: Request, res: Response, next: 
           isActive: false,
           expiresAt: new Date()
         })
-        .where(s => s.id.equals(session.id));
+        .where(eq(userSessions.id, session.id));
     }
     
     next();
@@ -107,7 +108,7 @@ export async function expireInactiveSessions(req: Request, res: Response, next: 
 async function getSession(sessionId: string) {
   const [session] = await db.select()
     .from(userSessions)
-    .where(s => s.sessionId.equals(sessionId));
+    .where(eq(userSessions.sessionId, sessionId));
   
   return session;
 }
@@ -115,7 +116,7 @@ async function getSession(sessionId: string) {
 async function updateSession(sessionId: string) {
   await db.update(userSessions)
     .set({ lastActivityAt: new Date() })
-    .where(s => s.sessionId.equals(sessionId));
+    .where(eq(userSessions.sessionId, sessionId));
 }
 
 async function createSession(
@@ -141,10 +142,10 @@ async function createSession(
 async function getUserActiveSessions(userId: number) {
   return db.select()
     .from(userSessions)
-    .where(s => 
-      s.userId.equals(userId)
-      .and(s.isActive.equals(true))
-    );
+    .where(and(
+      eq(userSessions.userId, userId),
+      eq(userSessions.isActive, true)
+    ));
 }
 
 async function updateUserSessionCount(userId: number, count: number) {

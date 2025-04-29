@@ -50,6 +50,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a demo user for testing
   await createDemoUser();
   
+  // Apply API usage tracking middleware to all authenticated routes
+  app.use(trackApiUsage);
+  
+  // Apply user session tracking for authenticated users
+  app.use(trackUserSession);
+  
+  // Apply plan limits enforcement
+  app.use(enforcePlanLimits);
+  
   // Protected Store connection routes
   app.get("/api/store-connections", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
