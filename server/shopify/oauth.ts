@@ -107,8 +107,12 @@ export function beginOAuth(req: Request, res: Response) {
     
     // Generate OAuth URL
     const redirectUrl = `/api/shopify/oauth/callback`;
+    
+    // Extract host without protocol to avoid duplication
+    const hostWithoutProtocol = process.env.SHOPIFY_HOST!.replace(/^https?:\/\//, '');
+    
     // Shopify API v11 uses different auth method
-    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${encodeURIComponent(`https://${process.env.SHOPIFY_HOST}${redirectUrl}`)}&state=${state}`;
+    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${encodeURIComponent(`https://${hostWithoutProtocol}${redirectUrl}`)}&state=${state}`;
     
     // Redirect to Shopify OAuth page
     res.status(200).json({ success: true, url: authUrl });
