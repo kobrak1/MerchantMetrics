@@ -27,6 +27,7 @@ export default function Dashboard() {
     activeConnectionId,
     setActiveConnectionId,
     addStoreConnection,
+    connectWithOAuth,
     isLoading: storeConnectionsLoading
   } = useStoreConnections();
   
@@ -166,6 +167,15 @@ export default function Dashboard() {
       return result;
     } catch (error) {
       console.error("Failed to connect store:", error);
+      return { success: false, error };
+    }
+  };
+  
+  const handleOAuthConnect = async (platform: string, shop: string) => {
+    try {
+      return await connectWithOAuth(platform, shop);
+    } catch (error) {
+      console.error("Failed to start OAuth flow:", error);
       return { success: false, error };
     }
   };
@@ -347,6 +357,7 @@ export default function Dashboard() {
         isOpen={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         onConnect={handleConnectStore}
+        onOAuthConnect={handleOAuthConnect}
       />
     </div>
   );

@@ -49,6 +49,38 @@ export function useStoreConnections() {
     return storeConnections.find(conn => conn.id === activeConnectionId) || null;
   };
   
+  const connectWithOAuth = async (platform: string, shop: string) => {
+    try {
+      // Call the OAuth begin endpoint
+      const response = await apiRequest('GET', `/api/shopify/oauth/begin?shop=${shop}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start OAuth flow');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.url) {
+        // Redirect the user to the Shopify OAuth page
+        window.location.href = result.url;
+        return { success: true };
+      } else {
+        throw new Error(result.message || 'Failed to start OAuth flow');
+      }
+    } catch (error: any) {
+      console.error('Failed to start OAuth flow:', error);
+      
+      toast({
+        title: "OAuth Failed",
+        description: error.message || "Could not start authorization process.",
+        variant: "destructive"
+      });
+      
+      return { success: false, error };
+    }
+  };
+  
   const addStoreConnection = async (connectionData: {
     name: string;
     platform: string;
@@ -147,6 +179,31 @@ export function useStoreConnections() {
     }
   };
   
+  // Check if we have an OAuth callback in the URL
+  useEffect(() => {
+    // This should run once on component mount
+    const urlParams = new URLSearchParams(window.location.search);
+    const shop = urlParams.get('shop');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    // If we have OAuth callback parameters and we're on the callback route
+    if (shop && code && state && window.location.pathname.includes('/callback')) {
+      // OAuth callback has been processed by the server, we can redirect back to the dashboard
+      // The server should have already created the store connection
+      toast({
+        title: "Store Connected",
+        description: `Successfully connected to ${shop}`,
+      });
+      
+      // Remove the query parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Refresh the connections data
+      queryClient.invalidateQueries({ queryKey: ['/api/store-connections'] });
+    }
+  }, [toast]);
+  
   return {
     isLoading: isLoading || isConnectionsLoading,
     storeConnections,
@@ -154,6 +211,7 @@ export function useStoreConnections() {
     setActiveConnectionId,
     getActiveConnection,
     addStoreConnection,
+    connectWithOAuth,
     removeStoreConnection
   };
 }

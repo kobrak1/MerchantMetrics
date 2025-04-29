@@ -6,6 +6,7 @@ import { useState } from "react";
 import { HelpCircle, Info, X } from "lucide-react";
 import { SiShopify, SiMagento } from "react-icons/si";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ConnectStoreModalProps {
   isOpen: boolean;
@@ -17,12 +18,14 @@ interface ConnectStoreModalProps {
     apiKey: string;
     apiSecret: string;
   }) => Promise<{ success: boolean; error?: any }>;
+  onOAuthConnect: (platform: string, shop: string) => Promise<{ success: boolean; error?: any }>;
 }
 
 export default function ConnectStoreModal({ 
   isOpen, 
   onClose,
-  onConnect 
+  onConnect,
+  onOAuthConnect
 }: ConnectStoreModalProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<"shopify" | "magento" | null>("shopify");
   const [name, setName] = useState("");
@@ -33,7 +36,42 @@ export default function ConnectStoreModal({
   const [error, setError] = useState<string | null>(null);
   
   const handleSubmit = async () => {
-    if (!selectedPlatform || !name || !storeUrl || !apiKey || !apiSecret) {
+    if (!selectedPlatform) {
+      setError("Please select a platform");
+      return;
+    }
+    
+    // For Shopify, use OAuth flow
+    if (selectedPlatform === "shopify") {
+      if (!storeUrl) {
+        setError("Please enter your Shopify store URL");
+        return;
+      }
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Clean the storeUrl to ensure it's in the correct format
+        const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        
+        // Begin Shopify OAuth flow
+        const result = await onOAuthConnect(selectedPlatform, cleanStoreUrl);
+        
+        if (!result.success) {
+          setError(result.error?.message || "Failed to start Shopify authorization. Please try again.");
+        }
+        // Don't close modal or reset yet - the redirect will happen from the OAuth flow
+      } catch (err) {
+        setError("An error occurred. Please try again.");
+        console.error(err);
+        setIsLoading(false);
+      }
+      return;
+    }
+    
+    // For Magento, continue with API key/secret flow
+    if (!name || !storeUrl || !apiKey || !apiSecret) {
       setError("Please fill all fields");
       return;
     }
@@ -113,21 +151,33 @@ export default function ConnectStoreModal({
               <Info className="h-5 w-5 mr-2 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium mb-1">Shopify Connection Instructions:</p>
-                <p>For <strong>API Secret</strong>, please enter your Shopify Admin API access token, not your API secret key.</p>
+                <p>Enter your store URL and you will be redirected to Shopify to authorize access. No API keys needed!</p>
+              </div>
+            </div>
+          )}
+          
+          {selectedPlatform === "magento" && (
+            <div className="bg-blue-50 p-3 rounded-md mb-4 text-sm text-blue-700 flex items-start">
+              <Info className="h-5 w-5 mr-2 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium mb-1">Magento Connection Instructions:</p>
+                <p>Please provide your Magento store API credentials to connect.</p>
               </div>
             </div>
           )}
           
           <div className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="storeName">Store Name</Label>
-              <Input
-                id="storeName"
-                placeholder="My Store"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
+            {selectedPlatform === "magento" && (
+              <div className="space-y-1">
+                <Label htmlFor="storeName">Store Name</Label>
+                <Input
+                  id="storeName"
+                  placeholder="My Store"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
             
             <div className="space-y-1">
               <Label htmlFor="storeUrl">Store URL</Label>
@@ -139,58 +189,30 @@ export default function ConnectStoreModal({
               />
             </div>
             
-            <div className="space-y-1">
-              <div className="flex items-center">
-                <Label htmlFor="apiKey">API Key</Label>
-                {selectedPlatform === "shopify" && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-4 w-4 ml-1 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-60">For Shopify, this is your API key from your Shopify app</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-              <Input
-                id="apiKey"
-                placeholder="Enter your API key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex items-center">
-                <Label htmlFor="apiSecret">
-                  {selectedPlatform === "shopify" ? "Admin API Access Token" : "API Secret"}
-                </Label>
-                {selectedPlatform === "shopify" && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-4 w-4 ml-1 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-60">This is your Admin API access token, used for authentication with Shopify API</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-              <Input
-                id="apiSecret"
-                type="password"
-                placeholder={selectedPlatform === "shopify" 
-                  ? "Enter your Admin API access token" 
-                  : "Enter your API secret"}
-                value={apiSecret}
-                onChange={(e) => setApiSecret(e.target.value)}
-              />
-            </div>
+            {selectedPlatform === "magento" && (
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="apiKey">API Key</Label>
+                  <Input
+                    id="apiKey"
+                    placeholder="Enter your API key"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="apiSecret">API Secret</Label>
+                  <Input
+                    id="apiSecret"
+                    type="password"
+                    placeholder="Enter your API secret"
+                    value={apiSecret}
+                    onChange={(e) => setApiSecret(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
             
             {error && (
               <div className="text-sm text-destructive">{error}</div>
@@ -203,7 +225,7 @@ export default function ConnectStoreModal({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? "Connecting..." : "Connect Store"}
+            {isLoading ? "Connecting..." : (selectedPlatform === "shopify" ? "Connect with Shopify" : "Connect Store")}
           </Button>
         </DialogFooter>
       </DialogContent>
