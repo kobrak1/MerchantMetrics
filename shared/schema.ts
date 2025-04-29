@@ -9,6 +9,11 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
+  currentPlanId: integer("current_plan_id").references(() => subscriptionTiers.id),
+  allowedStoreCount: integer("allowed_store_count").default(1),
+  lastLoginIp: text("last_login_ip"),
+  lastLoginAt: timestamp("last_login_at"),
+  sessionCount: integer("session_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -26,21 +31,32 @@ export const storeConnections = pgTable("store_connections", {
   name: text("name").notNull(),
   platform: text("platform").notNull(), // 'shopify' or 'magento'
   storeUrl: text("store_url").notNull(),
-  apiKey: text("api_key").notNull(),
-  apiSecret: text("api_secret").notNull(),
+  shopId: text("shop_id"),
+  shopDomain: text("shop_domain"),
+  accessToken: text("access_token"),
+  scope: text("scope"),
+  apiKey: text("api_key"),
+  apiSecret: text("api_secret"),
   isActive: boolean("is_active").default(true),
   lastSyncAt: timestamp("last_sync_at"),
+  totalApiRequests: integer("total_api_requests").default(0),
+  totalOrdersProcessed: integer("total_orders_processed").default(0),
+  lastWebhookAt: timestamp("last_webhook_at"),
+  tokenExpiresAt: timestamp("token_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertStoreConnectionSchema = createInsertSchema(storeConnections).pick({
-  userId: true,
-  name: true,
-  platform: true,
-  storeUrl: true,
-  apiKey: true,
-  apiSecret: true,
-});
+export const insertStoreConnectionSchema = createInsertSchema(storeConnections)
+  .omit({ 
+    id: true, 
+    isActive: true, 
+    lastSyncAt: true, 
+    totalApiRequests: true, 
+    totalOrdersProcessed: true,
+    lastWebhookAt: true,
+    tokenExpiresAt: true,
+    createdAt: true 
+  });
 
 // Orders schema
 export const orders = pgTable("orders", {
@@ -148,6 +164,52 @@ export const insertAnalyticsQuerySchema = createInsertSchema(analyticsQueries).p
   filters: true,
 });
 
+// API Usage Tracking
+export const apiUsage = pgTable("api_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  storeConnectionId: integer("store_connection_id").references(() => storeConnections.id),
+  endpoint: text("endpoint").notNull(),
+  method: text("method").notNull(),
+  statusCode: integer("status_code"),
+  responseTime: integer("response_time"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertApiUsageSchema = createInsertSchema(apiUsage).pick({
+  userId: true,
+  storeConnectionId: true,
+  endpoint: true,
+  method: true,
+  statusCode: true,
+  responseTime: true,
+  ipAddress: true,
+  userAgent: true,
+});
+
+// User Session Tracking
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  sessionId: text("session_id").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  isActive: boolean("is_active").default(true),
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const insertUserSessionSchema = createInsertSchema(userSessions).pick({
+  userId: true,
+  sessionId: true,
+  ipAddress: true,
+  userAgent: true,
+  expiresAt: true,
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -169,6 +231,12 @@ export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema
 
 export type AnalyticsQuery = typeof analyticsQueries.$inferSelect;
 export type InsertAnalyticsQuery = z.infer<typeof insertAnalyticsQuerySchema>;
+
+export type ApiUsage = typeof apiUsage.$inferSelect;
+export type InsertApiUsage = z.infer<typeof insertApiUsageSchema>;
+
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 
 // Extended schemas for API responses
 export const kpiDataSchema = z.object({
