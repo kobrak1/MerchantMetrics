@@ -360,6 +360,20 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
+  
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+  
+  async getUserAllowedStoreCount(id: number): Promise<number> {
+    const user = await this.getUser(id);
+    return user?.allowedStoreCount || 1; // Default to 1 if not set
+  }
 
   // Store connection operations
   async createStoreConnection(connection: InsertStoreConnection): Promise<StoreConnection> {
@@ -507,6 +521,15 @@ export class DatabaseStorage implements IStorage {
   async getSubscriptionTiers(): Promise<SubscriptionTier[]> {
     return db.select().from(subscriptionTiers).where(eq(subscriptionTiers.isActive, true));
   }
+  
+  async getSubscriptionTierById(tierId: number): Promise<SubscriptionTier | undefined> {
+    const [tier] = await db
+      .select()
+      .from(subscriptionTiers)
+      .where(eq(subscriptionTiers.id, tierId));
+    
+    return tier;
+  }
 
   async getUserSubscription(userId: number): Promise<UserSubscription | undefined> {
     const [subscription] = await db
@@ -525,6 +548,33 @@ export class DatabaseStorage implements IStorage {
   async createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription> {
     const [userSubscription] = await db.insert(userSubscriptions).values(subscription).returning();
     return userSubscription;
+  }
+  
+  async updateUserSubscription(id: number, data: Partial<UserSubscription>): Promise<UserSubscription> {
+    const [subscription] = await db
+      .update(userSubscriptions)
+      .set(data)
+      .where(eq(userSubscriptions.id, id))
+      .returning();
+    
+    if (!subscription) {
+      throw new Error(`User subscription with id ${id} not found`);
+    }
+    
+    return subscription;
+  }
+  
+  async getAllStoreConnections(): Promise<StoreConnection[]> {
+    return db.select().from(storeConnections);
+  }
+  
+  async getStoreConnectionByShopId(shopId: string): Promise<StoreConnection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(storeConnections)
+      .where(eq(storeConnections.shopId, shopId));
+    
+    return connection;
   }
 
   // Analytics operations
