@@ -18,8 +18,8 @@ export async function trackUserSession(req: Request, res: Response, next: NextFu
     
     // Session ID from Express session
     const sessionId = req.sessionID;
-    const ipAddress = req.ip;
-    const userAgent = req.get('User-Agent') || '';
+    const ipAddress = req.ip || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
     
     // Check if this session is already tracked
     const existingSession = await getSession(sessionId);
@@ -32,10 +32,12 @@ export async function trackUserSession(req: Request, res: Response, next: NextFu
       const activeSessions = await getUserActiveSessions(userId);
       
       // Create a new session record
-      await createSession(userId, sessionId, ipAddress, userAgent);
+      if (sessionId) {
+        await createSession(userId, sessionId, ipAddress, userAgent);
       
-      // Update user's session count
-      await updateUserSessionCount(userId, activeSessions.length + 1);
+        // Update user's session count
+        await updateUserSessionCount(userId, activeSessions.length + 1);
+      }
       
       // Check for suspicious activity (multiple sessions from different IPs)
       if (activeSessions.length > 0) {
@@ -43,7 +45,7 @@ export async function trackUserSession(req: Request, res: Response, next: NextFu
         uniqueIps.add(ipAddress);
         
         // If multiple IPs or user agents, log suspicious activity
-        if (uniqueIps.size > 1 && !req.session.multipleDevicesNotified) {
+        if (uniqueIps.size > 1 && !(req.session as any).multipleDevicesNotified) {
           await logSuspiciousActivity(userId, {
             type: 'multiple_ips',
             sessionId,
@@ -53,7 +55,7 @@ export async function trackUserSession(req: Request, res: Response, next: NextFu
           });
           
           // Set a flag to avoid notifying the user multiple times in the same session
-          req.session.multipleDevicesNotified = true;
+          (req.session as any).multipleDevicesNotified = true;
         }
       }
     }
