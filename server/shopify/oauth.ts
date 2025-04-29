@@ -111,8 +111,12 @@ export function beginOAuth(req: Request, res: Response) {
     // Extract host without protocol to avoid duplication
     const hostWithoutProtocol = process.env.SHOPIFY_HOST!.replace(/^https?:\/\//, '');
     
+    // Full redirect URL to use in the OAuth flow
+    const fullRedirectUrl = `https://${hostWithoutProtocol}${redirectUrl}`;
+    console.log('Shopify OAuth redirect URL:', fullRedirectUrl);
+    
     // Shopify API v11 uses different auth method
-    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${encodeURIComponent(`https://${hostWithoutProtocol}${redirectUrl}`)}&state=${state}`;
+    const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${encodeURIComponent(fullRedirectUrl)}&state=${state}`;
     
     // Redirect to Shopify OAuth page
     res.status(200).json({ success: true, url: authUrl });
