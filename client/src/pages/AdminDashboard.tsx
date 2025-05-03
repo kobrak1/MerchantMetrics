@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -81,7 +81,7 @@ type UserDetails = {
 
 const AdminDashboard = () => {
   const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -89,9 +89,9 @@ const AdminDashboard = () => {
   // Redirect non-admin users away
   useEffect(() => {
     if (!isLoading && user && !user.isAdmin) {
-      navigate("/");
+      setLocation("/");
     }
-  }, [isLoading, user, navigate]);
+  }, [isLoading, user, setLocation]);
 
   // Query to fetch all users
   const {
