@@ -58,7 +58,7 @@ export default function Header({
   if (!mounted) return null;
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-primary px-4 py-2 h-[61px] flex items-center justify-between">
+    <header className="bg-white dark:bg-gray-800 border-b-[2px] border-primary px-4 py-2 h-[61px] flex items-center justify-between shadow-lg shadow-primary/20">
       <div className="flex items-center">
         {isMobile && (
           <Button

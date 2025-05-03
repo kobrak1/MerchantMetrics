@@ -135,6 +135,7 @@ export const userSubscriptions = pgTable("user_subscriptions", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
   isActive: boolean("is_active").default(true),
+  isTrial: boolean("is_trial").default(false),
 });
 
 export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).pick({
@@ -143,6 +144,7 @@ export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions
   startDate: true,
   endDate: true,
   isActive: true,
+  isTrial: true,
 });
 
 // Analytics queries

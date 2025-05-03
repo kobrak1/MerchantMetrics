@@ -89,7 +89,7 @@ export default function Sidebar({
         isMobile && !isExpanded && "-translate-x-full",
       )}
     >
-      <div className="p-4 flex items-center justify-between border-b border-primary bg-gray-300">
+      <div className="p-4 h-[61px] flex items-center justify-between border-b-[2px] border-primary bg-gray-300 shadow-lg shadow-primary/50">
         <h1 className={cn("text-xl font-medium", !isExpanded && "hidden")}>
           ShopMetrics
         </h1>
@@ -219,17 +219,43 @@ export default function Sidebar({
 
         <ul>
           {[
-            { path: "/", label: "Dashboard", icon: <Home className="h-5 w-5 mr-3" /> },
-            { path: "/orders", label: "Orders", icon: <ShoppingCart className="h-5 w-5 mr-3" /> },
-            { path: "/customers", label: "Customers", icon: <Users className="h-5 w-5 mr-3" /> },
-            { path: "/inventory", label: "Inventory", icon: <Package className="h-5 w-5 mr-3" /> },
-            { path: "/settings", label: "Settings", icon: <Settings className="h-5 w-5 mr-3" /> }
+            {
+              path: "/",
+              label: "Dashboard",
+              icon: <Home className="h-5 w-5 mr-3" />,
+            },
+            {
+              path: "/orders",
+              label: "Orders",
+              icon: <ShoppingCart className="h-5 w-5 mr-3" />,
+            },
+            {
+              path: "/customers",
+              label: "Customers",
+              icon: <Users className="h-5 w-5 mr-3" />,
+            },
+            {
+              path: "/inventory",
+              label: "Inventory",
+              icon: <Package className="h-5 w-5 mr-3" />,
+            },
+            {
+              path: "/settings",
+              label: "Settings",
+              icon: <Settings className="h-5 w-5 mr-3" />,
+            },
           ].map(({ path, label, icon }) => {
             const [location] = useLocation();
             const isActive = location === path;
-            
+
             return (
-              <li key={path} className={cn("px-4 py-2", isActive && "bg-primary bg-opacity-30")}>
+              <li
+                key={path}
+                className={cn(
+                  "px-4 py-2",
+                  isActive && "bg-primary bg-opacity-30",
+                )}
+              >
                 <Link href={path} className="flex items-center">
                   {icon}
                   {isExpanded && <span>{label}</span>}
