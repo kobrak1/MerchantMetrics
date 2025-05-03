@@ -45,7 +45,7 @@ export default function Dashboard() {
       };
       
       try {
-        const res = await apiRequest('GET', `/api/analytics/kpi?connectionId=${activeConnectionId}`);
+        const res = await apiRequest('GET', `/api/analytics/kpi?storeConnectionId=${activeConnectionId}`);
         return res.json();
       } catch (error) {
         console.error('Failed to fetch KPI data:', error);
@@ -75,7 +75,7 @@ export default function Dashboard() {
       };
       
       try {
-        const res = await apiRequest('GET', `/api/analytics/store-performance?connectionId=${activeConnectionId}&period=${dateFilter}`);
+        const res = await apiRequest('GET', `/api/analytics/store-performance?storeConnectionIds=${activeConnectionId}&period=${dateFilter}`);
         return res.json();
       } catch (error) {
         console.error('Failed to fetch performance data:', error);
@@ -98,7 +98,7 @@ export default function Dashboard() {
       if (!activeConnectionId) return { topProducts: [] };
       
       try {
-        const res = await apiRequest('GET', `/api/analytics/top-products?connectionId=${activeConnectionId}`);
+        const res = await apiRequest('GET', `/api/analytics/top-products?storeConnectionId=${activeConnectionId}`);
         return res.json();
       } catch (error) {
         console.error('Failed to fetch top products:', error);
@@ -116,7 +116,7 @@ export default function Dashboard() {
       if (!activeConnectionId) return { recentOrders: [] };
       
       try {
-        const res = await apiRequest('GET', `/api/analytics/recent-orders?connectionId=${activeConnectionId}`);
+        const res = await apiRequest('GET', `/api/analytics/recent-orders?storeConnectionId=${activeConnectionId}`);
         return res.json();
       } catch (error) {
         console.error('Failed to fetch recent orders:', error);

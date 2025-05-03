@@ -1,0 +1,55 @@
+now it shows me the message below when I connected to the test store
+
+{
+  "success": true,
+  "message": "Store connected successfully",
+  "connection": {
+    "id": 9,
+    "userId": 5,
+    "name": "mr.oliveoil",
+    "platform": "shopify",
+    "storeUrl": "https://mr-oliveoil.myshopify.com",
+    "shopId": "gid://shopify/Shop/75603837153",
+    "shopDomain": "mr-oliveoil.myshopify.com",
+    "accessToken": "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",
+    "scope": "read_orders,read_customers,read_products",
+    "apiKey": "",
+    "apiSecret": "",
+    "isActive": true,
+    "lastSyncAt": null,
+    "totalApiRequests": 0,
+    "totalOrdersProcessed": 0,
+    "lastWebhookAt": null,
+    "tokenExpiresAt": null,
+    "createdAt": "2025-05-03T16:59:11.877Z"
+  }
+}
+
+but this time I can't retrieve the data from store,I get the errors below
+
+queryClient.ts:15 
+ GET https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/api/analytics/recent-orders?connectionId=10 400 (Bad Request)
+
+Dashboard.tsx:122 Failed to fetch recent orders: Error: 400: {"message":"Valid storeConnectionId is required"}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async queryFn (Dashboard.tsx:119:21)
+queryClient.ts:15 
+ GET https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/api/analytics/kpi?connectionId=10 400 (Bad Request)
+Dashboard.tsx:51 Failed to fetch KPI data: Error: 400: {"message":"Valid storeConnectionId is required"}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async queryFn (Dashboard.tsx:48:21)
+queryClient.ts:15 
+ GET https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/api/analytics/top-products?connectionId=10 400 (Bad Request)
+Dashboard.tsx:104 Failed to fetch top products: Error: 400: {"message":"Valid storeConnectionId is required"}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async queryFn (Dashboard.tsx:101:21)
+queryClient.ts:15 
+ GET https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/api/analytics/store-performance?connectionId=10&period=week 400 (Bad Request)
+Dashboard.tsx:81 Failed to fetch performance data: Error: 400: {"message":"storeConnectionIds parameter is required"}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async queryFn (Dashboard.tsx:78:21)
+﻿
