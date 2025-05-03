@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -81,17 +80,12 @@ type UserDetails = {
 
 const AdminDashboard = () => {
   const { user, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
-  // Redirect non-admin users away
-  useEffect(() => {
-    if (!isLoading && user && !user.isAdmin) {
-      setLocation("/");
-    }
-  }, [isLoading, user, setLocation]);
+  // Admin check is now handled by the ProtectedRoute component
+  // No need for additional redirect logic here
 
   // Query to fetch all users
   const {
@@ -172,9 +166,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!user?.isAdmin) {
-    return null; // Will be redirected via useEffect
-  }
+  // Admin check is now handled by the ProtectedRoute component
 
   return (
     <div className="container p-4 mx-auto">
