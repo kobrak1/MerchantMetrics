@@ -613,18 +613,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Shopify webhooks endpoint
   app.post("/api/shopify/webhooks", validateShopifyWebhook, async (req: Request, res: Response) => {
-    const topic = req.shopifyTopic;
-    const shop = req.shopifyShop;
-    
-    if (!topic || !shop) {
-      return res.status(400).json({ success: false, message: "Missing topic or shop" });
-    }
-    
     try {
+      const topic = req.shopifyTopic;
+      const shop = req.shopifyShop;
+      
+      if (!topic || !shop) {
+        return res.status(400).json({ success: false, message: "Missing topic or shop" });
+      }
+      
       console.log(`Received webhook: ${topic} from ${shop}`);
       
-      // Get the store connection for this shop
-      const connection = await storage.getStoreConnectionByShopId(shop);
+      // Get the store connection for this shop domain or shop ID 
+      // (depending on how it's sent in the webhook)
+      let connection = null;
+      if (shop.includes('gid://')) {
+        // This is a shop ID
+        connection = await storage.getStoreConnectionByShopId(shop);
+      } else {
+        // This is likely a domain
+        const connections = await storage.getAllStoreConnections();
+        connection = connections.find(conn => conn.shopDomain === shop);
+      }
       
       if (!connection) {
         return res.status(404).json({ success: false, message: "Store connection not found" });
@@ -652,6 +661,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Process product update
           console.log('Product updated:', req.body);
           break;
+          
+        case 'app/uninstalled':
+          // App was uninstalled, mark the connection as inactive
+          console.log('App uninstalled from shop:', shop);
+          await storage.updateStoreConnection(connection.id, {
+            isActive: false
+          });
+          break;
         
         // Add more webhook handlers as needed
         
@@ -662,8 +679,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Shopify expects a 200 response quickly to acknowledge receipt
       res.status(200).send();
     } catch (error) {
-      console.error(`Error processing webhook ${topic} from ${shop}:`, error);
-      res.status(500).json({ success: false, message: "Error processing webhook" });
+      console.error(`Error processing webhook:`, error);
+      // Still return 200 to acknowledge the webhook was received
+      // Shopify will consider it a failure otherwise and retry
+      res.status(200).send();
     }
   });
 

@@ -55,14 +55,12 @@ export default function ConnectStoreModal({
         // Clean the storeUrl to ensure it's in the correct format
         const cleanStoreUrl = storeUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
         
+        // For Shopify, the page will redirect immediately, so we can just show a loading indicator
         // Begin Shopify OAuth flow
-        const result = await onOAuthConnect(selectedPlatform, cleanStoreUrl);
+        await onOAuthConnect(selectedPlatform, cleanStoreUrl);
         
-        if (!result.success) {
-          setError(result.error?.message || "Failed to start Shopify authorization. Please try again.");
-          setIsLoading(false); // Make sure to set loading to false on error
-        }
-        // Don't close modal or reset yet - the redirect will happen from the OAuth flow
+        // The redirect will happen automatically from the hook
+        // We'll leave the loading state active since we're redirecting away
       } catch (err) {
         setError("An error occurred. Please try again.");
         console.error(err);

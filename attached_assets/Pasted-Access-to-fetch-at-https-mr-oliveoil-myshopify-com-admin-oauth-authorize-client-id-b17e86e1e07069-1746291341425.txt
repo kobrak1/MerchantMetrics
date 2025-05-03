@@ -1,0 +1,35 @@
+Access to fetch at 'https://mr-oliveoil.myshopify.com/admin/oauth/authorize?client_id=b17e86e1e070695f120d9cb6631ff0fe&scope=read_orders,read_customers,read_products&redirect_uri=https%3A%2F%2Fd36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev%2Fapi%2Fshopify%2Foauth%2Fcallback&state=216e4e59d1448b3b96f7ce60288c0909' (redirected from 'https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/api/shopify/oauth/begin?shop=mr-oliveoil.myshopify.com') from origin 'https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.Understand this error
+queryClient.ts:15 
+            
+            
+           GET https://mr-oliveoil.myshopify.com/admin/oauth/authorize?client_id=b17e86e1e070695f120d9cb6631ff0fe&scope=read_orders,read_customers,read_products&redirect_uri=https%3A%2F%2Fd36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev%2Fapi%2Fshopify%2Foauth%2Fcallback&state=216e4e59d1448b3b96f7ce60288c0909 net::ERR_FAILED 303 (See Other)
+apiRequest @ queryClient.ts:15
+connectWithOAuth @ use-store-connection.ts:55
+handleOAuthConnect @ Dashboard.tsx:176
+handleSubmit @ ConnectStoreModal.tsx:59
+callCallback2 @ chunk-RPCDYKBN.js?v=aa23371b:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=aa23371b:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=aa23371b:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=aa23371b:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=aa23371b:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=aa23371b:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=aa23371b:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=aa23371b:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=aa23371b:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=aa23371b:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=aa23371b:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=aa23371b:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=aa23371b:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=aa23371b:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=aa23371b:5449Understand this error
+use-store-connection.ts:72 Failed to start OAuth flow: TypeError: Failed to fetch
+    at apiRequest (queryClient.ts:15:21)
+    at connectWithOAuth (use-store-connection.ts:55:30)
+    at handleOAuthConnect (Dashboard.tsx:176:20)
+    at handleSubmit (ConnectStoreModal.tsx:59:30)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=aa23371b:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=aa23371b:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=aa23371b:3733:39)
+    at invokeGuardedCallbackAndCatchFirstError (chunk-RPCDYKBN.js?v=aa23371b:3736:33)
+    at executeDispatch (chunk-RPCDYKBN.js?v=aa23371b:7014:11)
+    at processDispatchQueueItemsInOrder (chunk-RPCDYKBN.js?v=aa23371b:7034:15)

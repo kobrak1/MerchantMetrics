@@ -51,22 +51,30 @@ export function useStoreConnections() {
   
   const connectWithOAuth = async (platform: string, shop: string) => {
     try {
-      // Call the OAuth begin endpoint
-      const response = await apiRequest('GET', `/api/shopify/oauth/begin?shop=${shop}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start OAuth flow');
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.url) {
-        // Redirect the user to the Shopify OAuth page
-        window.location.href = result.url;
+      // For Shopify OAuth, we need to redirect the browser directly instead of using fetch
+      if (platform === 'shopify') {
+        // Create the redirect URL directly
+        window.location.href = `/api/shopify/oauth/begin?shop=${encodeURIComponent(shop)}`;
+        // This will return but the page will be redirecting
         return { success: true };
       } else {
-        throw new Error(result.message || 'Failed to start OAuth flow');
+        // For other platforms, use the original approach
+        const response = await apiRequest('GET', `/api/${platform}/oauth/begin?shop=${shop}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to start OAuth flow');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.url) {
+          // Redirect the user to the OAuth page
+          window.location.href = result.url;
+          return { success: true };
+        } else {
+          throw new Error(result.message || 'Failed to start OAuth flow');
+        }
       }
     } catch (error: any) {
       console.error('Failed to start OAuth flow:', error);
