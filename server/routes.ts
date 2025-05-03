@@ -602,8 +602,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Apply plan limits enforcement
   app.use(enforcePlanLimits);
   
-  // Shopify OAuth routes
-  app.get("/api/shopify/oauth/begin", ensureAuthenticated, (req: Request, res: Response) => {
+  // Shopify OAuth routes - don't require authentication for direct installs
+  app.get("/api/shopify/oauth/begin", (req: Request, res: Response) => {
     beginOAuth(req, res);
   });
   
