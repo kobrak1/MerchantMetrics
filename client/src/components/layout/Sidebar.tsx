@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useStoreConnections } from "@/hooks/use-store-connection";
+import { Link, useLocation } from "wouter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -217,36 +218,25 @@ export default function Sidebar({
         </div>
 
         <ul>
-          <li className="px-4 py-2 bg-primary bg-opacity-30">
-            <a href="#" className="flex items-center">
-              <Home className="h-5 w-5 mr-3" />
-              {isExpanded && <span>Dashboard</span>}
-            </a>
-          </li>
-          <li className="px-4 py-2">
-            <a href="#" className="flex items-center">
-              <ShoppingCart className="h-5 w-5 mr-3" />
-              {isExpanded && <span>Orders</span>}
-            </a>
-          </li>
-          <li className="px-4 py-2">
-            <a href="#" className="flex items-center">
-              <Users className="h-5 w-5 mr-3" />
-              {isExpanded && <span>Customers</span>}
-            </a>
-          </li>
-          <li className="px-4 py-2">
-            <a href="#" className="flex items-center">
-              <Package className="h-5 w-5 mr-3" />
-              {isExpanded && <span>Inventory</span>}
-            </a>
-          </li>
-          <li className="px-4 py-2">
-            <a href="#" className="flex items-center">
-              <Settings className="h-5 w-5 mr-3" />
-              {isExpanded && <span>Settings</span>}
-            </a>
-          </li>
+          {[
+            { path: "/", label: "Dashboard", icon: <Home className="h-5 w-5 mr-3" /> },
+            { path: "/orders", label: "Orders", icon: <ShoppingCart className="h-5 w-5 mr-3" /> },
+            { path: "/customers", label: "Customers", icon: <Users className="h-5 w-5 mr-3" /> },
+            { path: "/inventory", label: "Inventory", icon: <Package className="h-5 w-5 mr-3" /> },
+            { path: "/settings", label: "Settings", icon: <Settings className="h-5 w-5 mr-3" /> }
+          ].map(({ path, label, icon }) => {
+            const [location] = useLocation();
+            const isActive = location === path;
+            
+            return (
+              <li key={path} className={cn("px-4 py-2", isActive && "bg-primary bg-opacity-30")}>
+                <Link href={path} className="flex items-center">
+                  {icon}
+                  {isExpanded && <span>{label}</span>}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="mt-auto p-4 bg-primary text-white">

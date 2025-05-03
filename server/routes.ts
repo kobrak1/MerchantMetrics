@@ -286,6 +286,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // New endpoint for full orders list with optional pagination
+  app.get("/api/analytics/orders", async (req: Request, res: Response) => {
+    try {
+      const storeConnectionId = parseInt(req.query.storeConnectionId as string);
+      if (isNaN(storeConnectionId)) {
+        return res.status(400).json({ message: "Valid storeConnectionId is required" });
+      }
+
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      // Get orders from the database
+      const ordersData = await storage.getOrdersByStoreConnection(storeConnectionId, limit);
+      
+      // Get total count for pagination
+      const totalCount = await storage.getOrdersCountByStoreConnection(storeConnectionId);
+      
+      res.status(200).json(ordersData);
+    } catch (error) {
+      console.error("Error getting orders:", error);
+      res.status(500).json({ error: "Failed to get orders" });
+    }
+  });
+  
+  // New endpoint for customers data
+  app.get("/api/analytics/customers", async (req: Request, res: Response) => {
+    try {
+      const storeConnectionId = parseInt(req.query.storeConnectionId as string);
+      if (isNaN(storeConnectionId)) {
+        return res.status(400).json({ message: "Valid storeConnectionId is required" });
+      }
+
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      // Get customer data (simplified for now - in a real implementation, we'd have a customers table)
+      // For now, let's derive customers from orders
+      const orders = await storage.getOrdersByStoreConnection(storeConnectionId);
+      
+      // Group orders by customer ID to create customer profiles
+      const customerMap = new Map();
+      orders.forEach(order => {
+        if (!customerMap.has(order.customerId)) {
+          customerMap.set(order.customerId, {
+            id: order.customerId,
+            orderCount: 0,
+            totalSpent: 0,
+            currency: order.currency,
+            lastOrderDate: null
+          });
+        }
+        
+        const customer = customerMap.get(order.customerId);
+        customer.orderCount++;
+        customer.totalSpent += order.totalAmount;
+        
+        // Track the most recent order date
+        const orderDate = new Date(order.orderDate);
+        if (!customer.lastOrderDate || orderDate > customer.lastOrderDate) {
+          customer.lastOrderDate = orderDate;
+        }
+      });
+      
+      const customers = Array.from(customerMap.values());
+      
+      // Sort by total spent (descending)
+      customers.sort((a, b) => b.totalSpent - a.totalSpent);
+      
+      // Apply pagination
+      const paginatedCustomers = customers.slice(0, limit);
+      
+      res.status(200).json(paginatedCustomers);
+    } catch (error) {
+      console.error("Error getting customers:", error);
+      res.status(500).json({ error: "Failed to get customers" });
+    }
+  });
+  
+  // New endpoint for products/inventory
+  app.get("/api/analytics/products", async (req: Request, res: Response) => {
+    try {
+      const storeConnectionId = parseInt(req.query.storeConnectionId as string);
+      if (isNaN(storeConnectionId)) {
+        return res.status(400).json({ message: "Valid storeConnectionId is required" });
+      }
+      
+      const products = await storage.getProductsByStoreConnection(storeConnectionId);
+      res.status(200).json(products);
+    } catch (error) {
+      console.error("Error getting products:", error);
+      res.status(500).json({ error: "Failed to get products" });
+    }
+  });
+  
+  // New endpoint for low-stock products
+  app.get("/api/analytics/low-stock-products", async (req: Request, res: Response) => {
+    try {
+      const storeConnectionId = parseInt(req.query.storeConnectionId as string);
+      if (isNaN(storeConnectionId)) {
+        return res.status(400).json({ message: "Valid storeConnectionId is required" });
+      }
+      
+      const lowStockProducts = await storage.getLowStockProducts(storeConnectionId);
+      res.status(200).json(lowStockProducts);
+    } catch (error) {
+      console.error("Error getting low stock products:", error);
+      res.status(500).json({ error: "Failed to get low stock products" });
+    }
+  });
+  
   // Subscription routes
   app.get("/api/subscription-tiers", async (req: Request, res: Response) => {
     try {
