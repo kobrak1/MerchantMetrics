@@ -6,6 +6,7 @@ import {
   subscriptionTiers,
   userSubscriptions,
   analyticsQueries,
+  apiUsage,
   type User,
   type InsertUser,
   type StoreConnection,
@@ -20,6 +21,8 @@ import {
   type InsertUserSubscription,
   type AnalyticsQuery,
   type InsertAnalyticsQuery,
+  type ApiUsage,
+  type InsertApiUsage,
 } from "@shared/schema";
 
 // Storage interface
@@ -410,26 +413,31 @@ export class DatabaseStorage implements IStorage {
   async deleteStoreConnection(id: number): Promise<boolean> {
     try {
       // Delete all related records from dependent tables
-
+      console.log(`Deleting store connection with ID ${id} and all related records`);
+      
       // 1. Delete related api_usage records
       await db
         .delete(apiUsage)
         .where(eq(apiUsage.storeConnectionId, id));
+      console.log(`Deleted related api_usage records`);
         
       // 2. Delete related analytics_queries records
       await db
         .delete(analyticsQueries)
         .where(eq(analyticsQueries.storeConnectionId, id));
+      console.log(`Deleted related analytics_queries records`);
       
       // 3. Delete related orders records
       await db
         .delete(orders)
         .where(eq(orders.storeConnectionId, id));
+      console.log(`Deleted related orders records`);
       
       // 4. Delete related products records
       await db
         .delete(products)
         .where(eq(products.storeConnectionId, id));
+      console.log(`Deleted related products records`);
       
       // Finally, delete the store connection itself
       const result = await db
@@ -437,6 +445,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(storeConnections.id, id))
         .returning({ id: storeConnections.id });
       
+      console.log(`Deleted store connection: ${JSON.stringify(result)}`);
       return result.length > 0;
     } catch (error) {
       console.error("Error deleting store connection:", error);

@@ -168,25 +168,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Delete the connection
-      const success = await storage.deleteStoreConnection(connectionId);
+      console.log(`Starting deletion of store connection ${connectionId} for user ${userId}`);
       
-      if (success) {
-        res.status(200).json({ 
-          success: true, 
-          message: "Store connection deleted successfully" 
-        });
-      } else {
+      try {
+        // Delete the connection and related data
+        const success = await storage.deleteStoreConnection(connectionId);
+        
+        if (success) {
+          console.log(`Successfully deleted store connection ${connectionId}`);
+          res.status(200).json({ 
+            success: true, 
+            message: "Store connection deleted successfully" 
+          });
+        } else {
+          console.error(`Failed to delete store connection ${connectionId} - no rows affected`);
+          res.status(500).json({ 
+            success: false, 
+            message: "Failed to delete store connection" 
+          });
+        }
+      } catch (deleteError: any) {
+        console.error(`Error in deleteStoreConnection for connection ${connectionId}:`, deleteError);
+        // Return a more specific error message when available
         res.status(500).json({ 
           success: false, 
-          message: "Failed to delete store connection" 
+          message: `Error deleting store connection: ${deleteError.message || 'Database error'}`
         });
       }
-    } catch (error) {
-      console.error("Error deleting store connection:", error);
+    } catch (error: any) {
+      console.error("Error in store connection deletion route:", error);
       res.status(500).json({ 
         success: false, 
-        message: "Error deleting store connection" 
+        message: `Error processing store connection deletion: ${error.message || 'Unknown error'}`
       });
     }
   });
