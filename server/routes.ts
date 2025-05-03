@@ -25,7 +25,7 @@ import { beginOAuth, completeOAuth, validateShopifyWebhook } from "./shopify/oau
 import { trackApiUsage, enforcePlanLimits } from "./middleware/limits";
 import { trackUserSession, expireInactiveSessions } from "./middleware/session-tracker";
 
-// Create demo and admin users for testing
+// Create and update demo and admin users for testing
 async function createDemoUser() {
   try {
     // Create demo user if not exists
@@ -33,25 +33,31 @@ async function createDemoUser() {
     if (!existingDemoUser) {
       // Create demo user with hashed password
       const hashedPassword = await hashPassword("demo123");
-      await storage.createUser({
+      const demoUser = await storage.createUser({
         username: "demo",
         password: hashedPassword,
         email: "demo@example.com",
         fullName: "John Smith"
       });
       console.log("Demo user created successfully");
+      
+      // Create subscription for demo user
+      await ensureUserHasSubscription(demoUser.id);
     }
 
-    // Create admin user if not exists
+    // Get admin credentials from environment variables
     const adminUsername = process.env.ADMIN_USERNAME || "admin";
     const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
     const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
     
-    const existingAdminUser = await storage.getUserByEmail(adminEmail);
+    // Check if admin user exists by email
+    let existingAdminUser = await storage.getUserByEmail(adminEmail);
+    let adminUser;
+    
     if (!existingAdminUser) {
-      // Create admin user with hashed password
+      // Admin user doesn't exist, create it
       const hashedPassword = await hashPassword(adminPassword);
-      await storage.createUser({
+      adminUser = await storage.createUser({
         username: adminUsername,
         password: hashedPassword,
         email: adminEmail,
@@ -59,9 +65,62 @@ async function createDemoUser() {
         isAdmin: true
       });
       console.log("Admin user created successfully");
+    } else if (existingAdminUser.username !== adminUsername) {
+      // Update admin user if username in .env is different
+      const hashedPassword = await hashPassword(adminPassword);
+      adminUser = await storage.updateUser(existingAdminUser.id, {
+        username: adminUsername,
+        password: hashedPassword,
+        isAdmin: true
+      });
+      console.log("Admin user updated with new credentials");
+    } else {
+      // Admin user exists with the same username, but we should check if password needs updating
+      // We can't compare passwords directly (they're hashed), so we'll update it anyway to ensure it matches .env
+      const hashedPassword = await hashPassword(adminPassword);
+      adminUser = await storage.updateUser(existingAdminUser.id, {
+        password: hashedPassword
+      });
+      console.log("Admin user password updated to match .env");
+    }
+    
+    // Ensure admin user has an active subscription
+    if (adminUser) {
+      await ensureUserHasSubscription(adminUser.id);
+    } else if (existingAdminUser) {
+      await ensureUserHasSubscription(existingAdminUser.id);
     }
   } catch (error) {
-    console.error("Failed to create users:", error);
+    console.error("Failed to create/update users:", error);
+  }
+}
+
+// Helper function to ensure a user has an active subscription
+async function ensureUserHasSubscription(userId: number) {
+  try {
+    // Check if user already has a subscription
+    const subscription = await storage.getUserSubscription(userId);
+    if (!subscription) {
+      // Get the free tier
+      const freeTiers = await storage.getSubscriptionTiers();
+      const freeTier = freeTiers.find(tier => tier.name.toLowerCase().includes('free'));
+      
+      if (freeTier) {
+        // Create a free subscription for the user
+        await storage.createUserSubscription({
+          userId,
+          tierId: freeTier.id,
+          startDate: new Date(),
+          isActive: true,
+          isTrial: false
+        });
+        console.log(`Created free subscription for user ${userId}`);
+      } else {
+        console.error('Free tier not found in subscription_tiers table');
+      }
+    }
+  } catch (error) {
+    console.error(`Error ensuring subscription for user ${userId}:`, error);
   }
 }
 
