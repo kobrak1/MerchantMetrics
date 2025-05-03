@@ -308,6 +308,17 @@ export async function completeOAuth(req: Request, res: Response) {
       // Register webhooks for this store
       await registerShopifyWebhooks(shop, accessToken);
       
+      // Start initial data sync from Shopify
+      try {
+        const { syncShopifyData } = await import('./data-sync');
+        // Run this asynchronously so we don't block the OAuth completion
+        syncShopifyData(shop, accessToken, existingConnection.id).catch(err => {
+          console.error('Error during initial data sync:', err);
+        });
+      } catch (err) {
+        console.error('Error importing data sync module:', err);
+      }
+      
       // Clean up session
       delete (req.session as any).shopifyOAuthState;
       delete (req.session as any).shopifyOAuthShop;
@@ -341,6 +352,17 @@ export async function completeOAuth(req: Request, res: Response) {
     
     // Register webhooks for this store
     await registerShopifyWebhooks(shop, accessToken);
+    
+    // Start initial data sync from Shopify
+    try {
+      const { syncShopifyData } = await import('./data-sync');
+      // Run this asynchronously so we don't block the OAuth completion
+      syncShopifyData(shop, accessToken, newConnection.id).catch(err => {
+        console.error('Error during initial data sync:', err);
+      });
+    } catch (err) {
+      console.error('Error importing data sync module:', err);
+    }
     
     // Clean up session
     delete (req.session as any).shopifyOAuthState;

@@ -294,15 +294,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid storeConnectionId is required" });
       }
 
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const status = req.query.status as string | undefined;
+      const offset = (page - 1) * limit;
       
       // Get orders from the database
-      const ordersData = await storage.getOrdersByStoreConnection(storeConnectionId, limit);
+      const ordersData = await storage.getOrdersByStoreConnection(storeConnectionId, limit, offset, status);
       
       // Get total count for pagination
-      const totalCount = await storage.getOrdersCountByStoreConnection(storeConnectionId);
+      const totalCount = await storage.getOrdersCountByStoreConnection(storeConnectionId, status);
       
-      res.status(200).json(ordersData);
+      res.status(200).json({
+        orders: ordersData,
+        pagination: {
+          total: totalCount,
+          page,
+          limit,
+          pages: Math.ceil(totalCount / limit)
+        }
+      });
     } catch (error) {
       console.error("Error getting orders:", error);
       res.status(500).json({ error: "Failed to get orders" });
@@ -317,6 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid storeConnectionId is required" });
       }
 
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       
       // Get customer data (simplified for now - in a real implementation, we'd have a customers table)
@@ -329,6 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!customerMap.has(order.customerId)) {
           customerMap.set(order.customerId, {
             id: order.customerId,
+            name: `Customer ${order.customerId.substring(0, 8)}`, // Simple fallback name
             orderCount: 0,
             totalSpent: 0,
             currency: order.currency,
@@ -353,9 +366,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       customers.sort((a, b) => b.totalSpent - a.totalSpent);
       
       // Apply pagination
-      const paginatedCustomers = customers.slice(0, limit);
+      const offset = (page - 1) * limit;
+      const paginatedCustomers = customers.slice(offset, offset + limit);
       
-      res.status(200).json(paginatedCustomers);
+      res.status(200).json({
+        customers: paginatedCustomers,
+        pagination: {
+          total: customers.length,
+          page,
+          limit,
+          pages: Math.ceil(customers.length / limit)
+        }
+      });
     } catch (error) {
       console.error("Error getting customers:", error);
       res.status(500).json({ error: "Failed to get customers" });
@@ -370,8 +392,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid storeConnectionId is required" });
       }
       
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
       const products = await storage.getProductsByStoreConnection(storeConnectionId);
-      res.status(200).json(products);
+      
+      // Apply pagination in memory
+      const offset = (page - 1) * limit;
+      const paginatedProducts = products.slice(offset, offset + limit);
+      
+      res.status(200).json({
+        products: paginatedProducts,
+        pagination: {
+          total: products.length,
+          page,
+          limit,
+          pages: Math.ceil(products.length / limit)
+        }
+      });
     } catch (error) {
       console.error("Error getting products:", error);
       res.status(500).json({ error: "Failed to get products" });
@@ -769,18 +807,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       switch (topic) {
         case 'orders/create':
           // Process new order
-          console.log('New order created:', req.body);
+          console.log('New order received:', req.body.id);
           
-          // Update order count for this store
-          await storage.updateStoreConnection(connection.id, {
-            totalOrdersProcessed: (connection.totalOrdersProcessed || 0) + 1
-          });
+          try {
+            const order = req.body;
+            const orderId = order.id.toString();
+            const customerId = order.customer?.id?.toString() || 'guest';
+            
+            // Map financial status to our status
+            let status = 'PENDING';
+            switch (order.financial_status) {
+              case 'paid':
+                status = 'COMPLETED';
+                break;
+              case 'refunded':
+                status = 'REFUNDED';
+                break;
+              case 'pending':
+                status = 'PROCESSING';
+                break;
+              default:
+                status = 'PENDING';
+            }
+            
+            // Save order to database
+            await storage.createOrder({
+              storeConnectionId: connection.id,
+              orderId,
+              orderNumber: order.name || order.order_number?.toString(),
+              customerId,
+              status,
+              totalAmount: parseFloat(order.total_price),
+              currency: order.currency || 'USD',
+              orderDate: new Date(order.created_at),
+            });
+            
+            // Update order count for this store
+            await storage.updateStoreConnection(connection.id, {
+              totalOrdersProcessed: (connection.totalOrdersProcessed || 0) + 1,
+              lastSyncAt: new Date()
+            });
+          } catch (err) {
+            console.error('Error processing order webhook:', err);
+          }
           
           break;
         
         case 'products/update':
           // Process product update
-          console.log('Product updated:', req.body);
+          console.log('Product updated:', req.body.id);
+          
+          try {
+            const product = req.body;
+            const productId = product.id.toString();
+            
+            // Check if this product already exists in our database
+            const products = await storage.getProductsByStoreConnection(connection.id);
+            const existingProduct = products.find(p => p.productId === productId);
+            
+            // Get the first variant for inventory info
+            const variant = product.variants?.[0];
+            
+            if (existingProduct) {
+              // Update existing product
+              await storage.updateProduct(existingProduct.id, {
+                name: product.title,
+                price: variant?.price ? parseFloat(variant.price) : null,
+                sku: variant?.sku || null,
+                inventory: variant?.inventory_quantity ?? null,
+                updatedAt: new Date()
+              });
+            } else {
+              // Create new product
+              await storage.createProduct({
+                storeConnectionId: connection.id,
+                name: product.title,
+                productId,
+                price: variant?.price ? parseFloat(variant.price) : null,
+                sku: variant?.sku || null,
+                inventory: variant?.inventory_quantity ?? null,
+                lowStockThreshold: 10, // Default value
+                currency: 'USD', // Default currency
+              });
+            }
+          } catch (err) {
+            console.error('Error processing product webhook:', err);
+          }
+          
           break;
           
         case 'app/uninstalled':

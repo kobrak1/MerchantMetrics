@@ -327,7 +327,7 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -459,16 +459,29 @@ export class DatabaseStorage implements IStorage {
     return newOrder;
   }
 
-  async getOrdersByStoreConnection(storeConnectionId: number, limit?: number): Promise<Order[]> {
+  async getOrdersByStoreConnection(storeConnectionId: number, limit?: number, offset?: number, status?: string): Promise<Order[]> {
     let query = db
       .select()
       .from(orders)
-      .where(eq(orders.storeConnectionId, storeConnectionId))
-      .orderBy(orders.orderDate);
+      .where(eq(orders.storeConnectionId, storeConnectionId));
     
+    // Add status filter if provided
+    if (status) {
+      query = query.where(eq(orders.status, status));
+    }
+    
+    // Sort by order date (newest first)
+    query = query.orderBy(desc(orders.orderDate));
+    
+    // Apply pagination if provided
     if (limit) {
       // @ts-ignore - limit is available but TypeScript doesn't recognize it
-      return query.limit(limit);
+      query = query.limit(limit);
+    }
+    
+    if (offset) {
+      // @ts-ignore - offset is available but TypeScript doesn't recognize it
+      query = query.offset(offset);
     }
     
     return query;
@@ -489,12 +502,20 @@ export class DatabaseStorage implements IStorage {
     return allOrders.length;
   }
 
-  async getOrdersCountByStoreConnection(storeConnectionId: number): Promise<number> {
-    // @ts-ignore - SQL works but TypeScript doesn't recognize it
-    const allOrders = await db
+  async getOrdersCountByStoreConnection(storeConnectionId: number, status?: string): Promise<number> {
+    // Base query
+    let query = db
       .select()
       .from(orders)
       .where(eq(orders.storeConnectionId, storeConnectionId));
+    
+    // Add status filter if provided
+    if (status) {
+      query = query.where(eq(orders.status, status));
+    }
+    
+    // Execute the query
+    const allOrders = await query;
     
     return allOrders.length;
   }
