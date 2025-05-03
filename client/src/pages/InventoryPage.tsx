@@ -55,12 +55,12 @@ export default function InventoryPage() {
 
   // Fetch products/inventory data
   const {
-    data: products = [],
+    data: productsResponse,
     isLoading: isLoadingProducts,
   } = useQuery({
     queryKey: ["/api/analytics/products", activeConnectionId],
     queryFn: async () => {
-      if (!activeConnectionId) return [];
+      if (!activeConnectionId) return { products: [] };
       const res = await fetch(`/api/analytics/products?storeConnectionId=${activeConnectionId}`);
       if (!res.ok) {
         throw new Error("Failed to fetch products");
@@ -70,6 +70,9 @@ export default function InventoryPage() {
     enabled: !!activeConnectionId,
   });
 
+  // Extract products from the response
+  const products = productsResponse?.products || [];
+  
   // Fetch low stock products
   const {
     data: lowStockProducts = [],

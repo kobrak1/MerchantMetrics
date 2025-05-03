@@ -48,12 +48,12 @@ export default function OrdersPage() {
 
   // Fetch orders data
   const {
-    data: orders = [],
+    data: ordersResponse,
     isLoading: isLoadingOrders,
   } = useQuery({
     queryKey: ["/api/analytics/orders", activeConnectionId],
     queryFn: async () => {
-      if (!activeConnectionId) return [];
+      if (!activeConnectionId) return { orders: [] };
       const res = await fetch(`/api/analytics/orders?storeConnectionId=${activeConnectionId}`);
       if (!res.ok) {
         throw new Error("Failed to fetch orders");
@@ -62,6 +62,9 @@ export default function OrdersPage() {
     },
     enabled: !!activeConnectionId,
   });
+  
+  // Extract orders from the response
+  const orders = ordersResponse?.orders || [];
 
   // Fetch user subscription
   const {

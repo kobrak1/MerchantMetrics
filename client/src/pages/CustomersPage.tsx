@@ -58,12 +58,12 @@ export default function CustomersPage() {
 
   // Fetch customers data
   const {
-    data: customers = [],
+    data: customersResponse,
     isLoading: isLoadingCustomers,
   } = useQuery({
     queryKey: ["/api/analytics/customers", activeConnectionId],
     queryFn: async () => {
-      if (!activeConnectionId) return [];
+      if (!activeConnectionId) return { customers: [] };
       const res = await fetch(`/api/analytics/customers?storeConnectionId=${activeConnectionId}`);
       if (!res.ok) {
         throw new Error("Failed to fetch customers");
@@ -73,6 +73,9 @@ export default function CustomersPage() {
     enabled: !!activeConnectionId,
   });
 
+  // Extract customers from the response
+  const customers = customersResponse?.customers || [];
+  
   // Fetch user subscription
   const {
     data: subscription,
