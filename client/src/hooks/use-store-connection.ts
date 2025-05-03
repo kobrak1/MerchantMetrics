@@ -32,12 +32,15 @@ export function useStoreConnections() {
   
   useEffect(() => {
     if (connectionsData && connectionsData.connections) {
+      console.log('Store connections loaded:', connectionsData.connections);
       setStoreConnections(connectionsData.connections);
       // Set the first active connection as the default
       const activeConnection = connectionsData.connections.find((conn: StoreConnection) => conn.isActive);
       if (activeConnection) {
+        console.log('Setting active connection ID to active connection:', activeConnection.id);
         setActiveConnectionId(activeConnection.id);
       } else if (connectionsData.connections.length > 0) {
+        console.log('Setting active connection ID to first connection:', connectionsData.connections[0].id);
         setActiveConnectionId(connectionsData.connections[0].id);
       }
       setIsLoading(false);

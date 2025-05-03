@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useStoreConnections } from "@/hooks/use-store-connection";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,14 +37,21 @@ export default function OrdersPage() {
   
   // Fetch store connections
   const {
-    data: storeConnections = [],
+    storeConnections = [],
     isLoading: isLoadingConnections,
+    activeConnectionId: hookActiveConnectionId,
+    setActiveConnectionId: hookSetActiveConnectionId,
   } = useStoreConnections();
 
-  // Set active connection if not already set
-  if (!isLoadingConnections && storeConnections.length > 0 && activeConnectionId === null) {
-    setActiveConnectionId(storeConnections[0].id);
-  }
+  // Use the connection ID from the hook directly
+  useEffect(() => {
+    if (hookActiveConnectionId !== null && hookActiveConnectionId !== undefined) {
+      console.log('Setting active connection ID from hook:', hookActiveConnectionId);
+      setActiveConnectionId(hookActiveConnectionId);
+    }
+  }, [hookActiveConnectionId]);
+  
+  console.log('OrdersPage state - activeConnectionId:', activeConnectionId, 'Hook connection ID:', hookActiveConnectionId);
 
   // Fetch orders data
   const {
@@ -65,6 +72,7 @@ export default function OrdersPage() {
   
   // Extract orders from the response
   const orders = ordersResponse?.orders || [];
+  console.log('Orders data:', ordersResponse, 'Extracted orders:', orders);
 
   // Fetch user subscription
   const {
