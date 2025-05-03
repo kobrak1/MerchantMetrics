@@ -13,9 +13,11 @@ import {
   Settings,
   Trash2,
   AlertCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useStoreConnections } from "@/hooks/use-store-connection";
+import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import {
   AlertDialog,
@@ -53,6 +55,7 @@ export default function Sidebar({
   const [isExpanded, setIsExpanded] = useState(true);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { removeStoreConnection } = useStoreConnections();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [storeToRemove, setStoreToRemove] = useState<number | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -244,6 +247,13 @@ export default function Sidebar({
               label: "Settings",
               icon: <Settings className="h-5 w-5 mr-3" />,
             },
+            ...(user?.isAdmin ? [
+              {
+                path: "/admin",
+                label: "Admin Dashboard",
+                icon: <ShieldAlert className="h-5 w-5 mr-3" />,
+              }
+            ] : []),
           ].map(({ path, label, icon }) => {
             const [location] = useLocation();
             const isActive = location === path;
