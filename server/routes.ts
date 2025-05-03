@@ -252,6 +252,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Delete a user (admin only)
+  app.delete("/api/admin/users/:id", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID"
+        });
+      }
+
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Prevent deleting your own account
+      if (userId === (req.user as any).id) {
+        return res.status(400).json({
+          success: false,
+          message: "You cannot delete your own account"
+        });
+      }
+
+      // Delete user's store connections first
+      const storeConnections = await storage.getStoreConnectionsByUserId(userId);
+      for (const connection of storeConnections) {
+        await storage.deleteStoreConnection(connection.id);
+      }
+
+      // Delete the user's subscription if it exists
+      const subscription = await storage.getUserSubscription(userId);
+      if (subscription) {
+        await storage.deleteUserSubscription(userId);
+      }
+
+      // Delete the user
+      const success = await storage.deleteUser(userId);
+      
+      if (success) {
+        res.status(200).json({
+          success: true,
+          message: "User deleted successfully"
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to delete user"
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error deleting user"
+      });
+    }
+  });
+  
+  // Add a new user (admin only)
+  app.post("/api/admin/users", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      // Validate the user data
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username or email already exists
+      const existingUserByUsername = await storage.getUserByUsername(userData.username);
+      if (existingUserByUsername) {
+        return res.status(400).json({
+          success: false,
+          message: "Username already exists"
+        });
+      }
+      
+      const existingUserByEmail = await storage.getUserByEmail(userData.email);
+      if (existingUserByEmail) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists"
+        });
+      }
+      
+      // Hash the password
+      const hashedPassword = await hashPassword(userData.password);
+      
+      // Create the user
+      const newUser = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
+      
+      // Create a free subscription for the new user
+      await ensureUserHasSubscription(newUser.id);
+      
+      res.status(201).json({
+        success: true,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          fullName: newUser.fullName,
+          isAdmin: newUser.isAdmin || false,
+          createdAt: newUser.createdAt
+        }
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: fromZodError(error).message
+        });
+      }
+      
+      console.error("Error creating user:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error creating user"
+      });
+    }
+  });
 
   // Create a demo user for testing
   await createDemoUser();

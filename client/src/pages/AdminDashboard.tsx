@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 // UI Components
 import {
@@ -30,6 +33,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +51,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserCog, Store, Users, Package, BarChart } from "lucide-react";
+import { 
+  Loader2, 
+  UserCog, 
+  Store, 
+  Users, 
+  Package, 
+  BarChart, 
+  PlusCircle, 
+  Trash2 
+} from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 type User = {
   id: number;
@@ -78,11 +109,35 @@ type UserDetails = {
   subscription: UserSubscription | null;
 };
 
+// Define form schema for adding a new user
+const newUserFormSchema = z.object({
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" })
+    .max(50, { message: "Username cannot exceed 50 characters" }),
+  email: z
+    .string()
+    .email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
+  fullName: z
+    .string()
+    .min(2, { message: "Full name must be at least 2 characters" })
+    .max(100, { message: "Full name cannot exceed 100 characters" }),
+  isAdmin: z.boolean().default(false),
+});
+
+type NewUserFormValues = z.infer<typeof newUserFormSchema>;
+
 const AdminDashboard = () => {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Admin check is now handled by the ProtectedRoute component
   // No need for additional redirect logic here
@@ -117,6 +172,18 @@ const AdminDashboard = () => {
     enabled: !!selectedUserId && isUserModalOpen,
   });
 
+  // Form for adding a new user
+  const form = useForm<NewUserFormValues>({
+    resolver: zodResolver(newUserFormSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      fullName: "",
+      isAdmin: false,
+    },
+  });
+
   // Mutation to update user
   const updateUserMutation = useMutation({
     mutationFn: async ({
@@ -145,6 +212,54 @@ const AdminDashboard = () => {
       });
     },
   });
+  
+  // Mutation to add a new user
+  const addUserMutation = useMutation({
+    mutationFn: async (userData: NewUserFormValues) => {
+      const response = await apiRequest("POST", "/api/admin/users", userData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User created",
+        description: "New user has been created successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setIsAddUserDialogOpen(false);
+      form.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "User creation failed",
+        description: "Failed to create user: " + error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation to delete a user
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/users/${userId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User deleted",
+        description: "User has been deleted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Deletion failed",
+        description: "Failed to delete user: " + error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleViewUser = (userId: number) => {
     setSelectedUserId(userId);
@@ -156,6 +271,19 @@ const AdminDashboard = () => {
       userId,
       data: { isAdmin: !currentIsAdmin },
     });
+  };
+  
+  const handleAddUser = async (data: NewUserFormValues) => {
+    addUserMutation.mutate(data);
+  };
+  
+  const handleDeleteUser = (userId: number) => {
+    deleteUserMutation.mutate(userId);
+  };
+
+  const confirmDeleteUser = (userToDelete: User) => {
+    setUserToDelete(userToDelete);
+    setIsDeleteDialogOpen(true);
   };
 
   if (isLoading) {

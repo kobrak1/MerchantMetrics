@@ -36,6 +36,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User>;
+  deleteUser(id: number): Promise<boolean>;
   
   // Store connection operations
   createStoreConnection(connection: InsertStoreConnection): Promise<StoreConnection>;
@@ -62,6 +64,7 @@ export interface IStorage {
   getSubscriptionTiers(): Promise<SubscriptionTier[]>;
   getUserSubscription(userId: number): Promise<UserSubscription | undefined>;
   createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  deleteUserSubscription(userId: number): Promise<boolean>;
   
   // Analytics operations
   createAnalyticsQuery(query: InsertAnalyticsQuery): Promise<AnalyticsQuery>;
@@ -312,6 +315,32 @@ export class MemStorage implements IStorage {
     const userSubscription: UserSubscription = { ...subscription, id };
     this.userSubscriptions.set(id, userSubscription);
     return userSubscription;
+  }
+  
+  async deleteUserSubscription(userId: number): Promise<boolean> {
+    // Find the user's subscription
+    const subscription = await this.getUserSubscription(userId);
+    if (!subscription) {
+      return false;
+    }
+    
+    // Delete the subscription
+    return this.userSubscriptions.delete(subscription.id);
+  }
+  
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
+    
+    const updatedUser = { ...user, ...data };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
   }
   
   // Analytics operations
@@ -629,6 +658,37 @@ export class DatabaseStorage implements IStorage {
     }
     
     return subscription;
+  }
+  
+  async deleteUserSubscription(userId: number): Promise<boolean> {
+    // Find the user's subscription first
+    const subscription = await this.getUserSubscription(userId);
+    if (!subscription) {
+      return false;
+    }
+    
+    // Delete the subscription
+    const result = await db
+      .delete(userSubscriptions)
+      .where(eq(userSubscriptions.id, subscription.id))
+      .returning({ id: userSubscriptions.id });
+      
+    return result.length > 0;
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      // Delete the user record
+      const result = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning({ id: users.id });
+        
+      return result.length > 0;
+    } catch (error) {
+      console.error(`Error deleting user with ID ${id}:`, error);
+      return false;
+    }
   }
   
   async getAllStoreConnections(): Promise<StoreConnection[]> {
