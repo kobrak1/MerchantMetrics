@@ -408,12 +408,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteStoreConnection(id: number): Promise<boolean> {
-    const result = await db
-      .delete(storeConnections)
-      .where(eq(storeConnections.id, id))
-      .returning({ id: storeConnections.id });
-    
-    return result.length > 0;
+    try {
+      // Delete all related records from dependent tables
+
+      // 1. Delete related api_usage records
+      await db
+        .delete(apiUsage)
+        .where(eq(apiUsage.storeConnectionId, id));
+        
+      // 2. Delete related analytics_queries records
+      await db
+        .delete(analyticsQueries)
+        .where(eq(analyticsQueries.storeConnectionId, id));
+      
+      // 3. Delete related orders records
+      await db
+        .delete(orders)
+        .where(eq(orders.storeConnectionId, id));
+      
+      // 4. Delete related products records
+      await db
+        .delete(products)
+        .where(eq(products.storeConnectionId, id));
+      
+      // Finally, delete the store connection itself
+      const result = await db
+        .delete(storeConnections)
+        .where(eq(storeConnections.id, id))
+        .returning({ id: storeConnections.id });
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error deleting store connection:", error);
+      throw error; // Re-throw to be handled by the route handler
+    }
   }
 
   // Order operations
