@@ -177,13 +177,24 @@ export function setupAuth(app: Express) {
       req.login(user, (err) => {
         if (err) return next(err);
         
+        // Update last login info
+        storage.updateUser(user.id, {
+          lastLoginAt: new Date(),
+          lastLoginIp: req.ip,
+          sessionCount: (user.sessionCount || 0) + 1
+        }).catch(error => {
+          console.error("Error updating login stats:", error);
+        });
+        
         return res.json({
           success: true,
           user: {
             id: user.id,
             username: user.username,
             email: user.email,
-            fullName: user.fullName
+            fullName: user.fullName,
+            isAdmin: user.isAdmin || false,
+            redirectTo: user.isAdmin ? '/admin-dashboard' : '/'
           }
         });
       });
@@ -224,7 +235,8 @@ export function setupAuth(app: Express) {
         id: user.id,
         username: user.username,
         email: user.email,
-        fullName: user.fullName
+        fullName: user.fullName,
+        isAdmin: user.isAdmin || false
       }
     });
   });
@@ -240,6 +252,18 @@ export function setupAuth(app: Express) {
       message: "Authentication required"
     });
   };
+  
+  // Admin check middleware
+  const ensureAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && (req.user as UserModel).isAdmin) {
+      return next();
+    }
+    
+    res.status(403).json({ 
+      success: false, 
+      message: "Admin access required"
+    });
+  };
 
-  return { ensureAuthenticated };
+  return { ensureAuthenticated, ensureAdmin };
 }

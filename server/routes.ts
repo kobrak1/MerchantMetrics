@@ -45,7 +45,7 @@ async function createDemoUser() {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and get middleware
-  const { ensureAuthenticated } = setupAuth(app);
+  const { ensureAuthenticated, ensureAdmin } = setupAuth(app);
   
   // Create a demo user for testing
   await createDemoUser();
