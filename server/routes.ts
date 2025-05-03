@@ -47,6 +47,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and get middleware
   const { ensureAuthenticated, ensureAdmin } = setupAuth(app);
   
+  // Admin routes
+  app.get("/api/admin/users", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.status(200).json({
+        success: true,
+        users: users.map(user => ({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          isAdmin: user.isAdmin || false,
+          lastLoginAt: user.lastLoginAt,
+          createdAt: user.createdAt,
+          sessionCount: user.sessionCount || 0
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching users"
+      });
+    }
+  });
+
+  app.get("/api/admin/users/:id", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Get subscription info for this user
+      const subscription = await storage.getUserSubscription(userId);
+      
+      // Get store connections for this user
+      const storeConnections = await storage.getStoreConnectionsByUserId(userId);
+
+      res.status(200).json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          isAdmin: user.isAdmin || false,
+          lastLoginAt: user.lastLoginAt,
+          createdAt: user.createdAt,
+          sessionCount: user.sessionCount || 0
+        },
+        subscription,
+        storeConnections
+      });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching user details"
+      });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Only allow specific fields to be updated
+      const allowedFields = ['isAdmin', 'fullName', 'email', 'allowedStoreCount'];
+      const updateData: Partial<User> = {};
+      
+      for (const field of allowedFields) {
+        if (field in req.body) {
+          (updateData as any)[field] = req.body[field];
+        }
+      }
+
+      const updatedUser = await storage.updateUser(userId, updateData);
+
+      res.status(200).json({
+        success: true,
+        user: {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          fullName: updatedUser.fullName,
+          isAdmin: updatedUser.isAdmin || false,
+          lastLoginAt: updatedUser.lastLoginAt,
+          createdAt: updatedUser.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating user"
+      });
+    }
+  });
+
   // Create a demo user for testing
   await createDemoUser();
   
