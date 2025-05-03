@@ -122,8 +122,8 @@ export class MemStorage implements IStorage {
     const tiers = [
       {
         id: this.subscriptionTierId++,
-        name: "Free Trial",
-        maxOrders: 100,
+        name: "Free Plan",
+        maxOrders: 1000,
         price: 0,
         features: ["Basic analytics", "Connect 1 store"],
         isActive: true,
@@ -131,7 +131,7 @@ export class MemStorage implements IStorage {
       {
         id: this.subscriptionTierId++,
         name: "Growth Plan",
-        maxOrders: 1000,
+        maxOrders: 5000,
         price: 29,
         features: ["Advanced analytics", "Connect up to 3 stores", "Priority support"],
         isActive: true,
@@ -139,7 +139,7 @@ export class MemStorage implements IStorage {
       {
         id: this.subscriptionTierId++,
         name: "Business Plan",
-        maxOrders: 5000,
+        maxOrders: 10000,
         price: 79,
         features: ["Full analytics suite", "Unlimited stores", "24/7 support", "API access"],
         isActive: true,
@@ -636,22 +636,22 @@ async function initializeDatabase() {
   if (existingTiers.length === 0) {
     const tiers = [
       {
-        name: "Free Trial",
-        maxOrders: 100,
+        name: "Free Plan",
+        maxOrders: 1000,
         price: 0,
         features: ["Basic analytics", "Connect 1 store"],
         isActive: true,
       },
       {
         name: "Growth Plan",
-        maxOrders: 1000,
+        maxOrders: 5000,
         price: 29,
         features: ["Advanced analytics", "Connect up to 3 stores", "Priority support"],
         isActive: true,
       },
       {
         name: "Business Plan",
-        maxOrders: 5000,
+        maxOrders: 10000,
         price: 79,
         features: ["Full analytics suite", "Unlimited stores", "24/7 support", "API access"],
         isActive: true,
