@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useStoreConnections } from "@/hooks/use-store-connection";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,14 +44,21 @@ export default function InventoryPage() {
   
   // Fetch store connections
   const {
-    data: storeConnections = [],
+    storeConnections = [],
     isLoading: isLoadingConnections,
+    activeConnectionId: hookActiveConnectionId,
+    setActiveConnectionId: hookSetActiveConnectionId,
   } = useStoreConnections();
 
-  // Set active connection if not already set
-  if (!isLoadingConnections && storeConnections.length > 0 && activeConnectionId === null) {
-    setActiveConnectionId(storeConnections[0].id);
-  }
+  // Use the connection ID from the hook directly
+  useEffect(() => {
+    if (hookActiveConnectionId !== null && hookActiveConnectionId !== undefined) {
+      console.log('InventoryPage - Setting active connection ID from hook:', hookActiveConnectionId);
+      setActiveConnectionId(hookActiveConnectionId);
+    }
+  }, [hookActiveConnectionId]);
+  
+  console.log('InventoryPage state - activeConnectionId:', activeConnectionId, 'Hook connection ID:', hookActiveConnectionId);
 
   // Fetch products/inventory data
   const {
@@ -309,6 +316,14 @@ export default function InventoryPage() {
       <ConnectStoreModal
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
+        onConnect={async (data) => {
+          const result = await hookSetActiveConnectionId.addStoreConnection(data);
+          return result;
+        }}
+        onOAuthConnect={async (platform, shop) => {
+          const result = await hookSetActiveConnectionId.connectWithOAuth(platform, shop);
+          return result;
+        }}
       />
     </div>
   );

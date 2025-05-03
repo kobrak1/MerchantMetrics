@@ -41,6 +41,8 @@ export default function OrdersPage() {
     isLoading: isLoadingConnections,
     activeConnectionId: hookActiveConnectionId,
     setActiveConnectionId: hookSetActiveConnectionId,
+    addStoreConnection,
+    connectWithOAuth
   } = useStoreConnections();
 
   // Use the connection ID from the hook directly
@@ -228,6 +230,8 @@ export default function OrdersPage() {
       <ConnectStoreModal
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
+        onConnect={addStoreConnection}
+        onOAuthConnect={connectWithOAuth}
       />
     </div>
   );

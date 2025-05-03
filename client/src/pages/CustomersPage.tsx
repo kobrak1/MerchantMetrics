@@ -280,6 +280,14 @@ export default function CustomersPage() {
       <ConnectStoreModal
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
+        onConnect={async (data) => {
+          const result = await hookSetActiveConnectionId.addStoreConnection(data);
+          return result;
+        }}
+        onOAuthConnect={async (platform, shop) => {
+          const result = await hookSetActiveConnectionId.connectWithOAuth(platform, shop);
+          return result;
+        }}
       />
     </div>
   );
