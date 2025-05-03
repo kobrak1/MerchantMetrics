@@ -238,9 +238,17 @@ async function ensureSubscriptionTables() {
         tier_id INTEGER NOT NULL,
         start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         end_date TIMESTAMP,
-        is_active BOOLEAN DEFAULT TRUE
+        is_active BOOLEAN DEFAULT TRUE,
+        is_trial BOOLEAN DEFAULT FALSE
       )
     `);
+  } else {
+    // Check if is_trial column exists and add it if not
+    const columns = await getTableColumns('user_subscriptions');
+    if (!columns.includes('is_trial')) {
+      await db.execute(sql`ALTER TABLE user_subscriptions ADD COLUMN is_trial BOOLEAN DEFAULT FALSE`);
+      console.log('Added is_trial column to user_subscriptions table');
+    }
   }
 }
 
