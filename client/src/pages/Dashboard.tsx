@@ -35,27 +35,25 @@ export default function Dashboard() {
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['/api/analytics/kpi', activeConnectionId],
     queryFn: async () => {
-      if (!activeConnectionId) return { 
-        kpiData: { 
-          dailyRevenue: 0, 
-          totalOrders: 0, 
-          repeatBuyerRate: 0,
-          inventoryAlerts: []
-        }
+      if (!activeConnectionId) return {
+        dailyRevenue: 0, 
+        totalOrders: 0, 
+        repeatBuyerRate: 0,
+        inventoryAlerts: []
       };
       
       try {
         const res = await apiRequest('GET', `/api/analytics/kpi?storeConnectionId=${activeConnectionId}`);
-        return res.json();
+        const data = await res.json();
+        console.log('KPI Data:', data); // Log the data for debugging
+        return data; // Return the data directly as it comes from the API
       } catch (error) {
         console.error('Failed to fetch KPI data:', error);
-        return { 
-          kpiData: { 
-            dailyRevenue: 0, 
-            totalOrders: 0, 
-            repeatBuyerRate: 0,
-            inventoryAlerts: []
-          }
+        return {
+          dailyRevenue: 0, 
+          totalOrders: 0, 
+          repeatBuyerRate: 0,
+          inventoryAlerts: []
         };
       }
     },
@@ -67,23 +65,21 @@ export default function Dashboard() {
   const { data: performanceData, isLoading: performanceLoading } = useQuery({
     queryKey: ['/api/analytics/store-performance', activeConnectionId, dateFilter],
     queryFn: async () => {
-      if (!activeConnectionId) return { 
-        storePerformance: {
-          labels: [],
-          datasets: []
-        }
+      if (!activeConnectionId) return {
+        labels: [],
+        datasets: []
       };
       
       try {
         const res = await apiRequest('GET', `/api/analytics/store-performance?storeConnectionIds=${activeConnectionId}&period=${dateFilter}`);
-        return res.json();
+        const data = await res.json();
+        console.log('Performance Data:', data); // Log the data for debugging
+        return data; // Return data directly as it comes from the API
       } catch (error) {
         console.error('Failed to fetch performance data:', error);
-        return { 
-          storePerformance: {
-            labels: [],
-            datasets: []
-          }
+        return {
+          labels: [],
+          datasets: []
         };
       }
     },
@@ -95,14 +91,16 @@ export default function Dashboard() {
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['/api/analytics/top-products', activeConnectionId],
     queryFn: async () => {
-      if (!activeConnectionId) return { topProducts: [] };
+      if (!activeConnectionId) return [];
       
       try {
         const res = await apiRequest('GET', `/api/analytics/top-products?storeConnectionId=${activeConnectionId}`);
-        return res.json();
+        const data = await res.json();
+        console.log('Top Products Data:', data); // Log the data for debugging
+        return data; // Return data directly as it comes from the API
       } catch (error) {
         console.error('Failed to fetch top products:', error);
-        return { topProducts: [] };
+        return [];
       }
     },
     enabled: !!activeConnectionId,
@@ -113,14 +111,16 @@ export default function Dashboard() {
   const { data: ordersData, isLoading: ordersLoading } = useQuery({
     queryKey: ['/api/analytics/recent-orders', activeConnectionId],
     queryFn: async () => {
-      if (!activeConnectionId) return { recentOrders: [] };
+      if (!activeConnectionId) return [];
       
       try {
         const res = await apiRequest('GET', `/api/analytics/recent-orders?storeConnectionId=${activeConnectionId}`);
-        return res.json();
+        const data = await res.json();
+        console.log('Recent Orders Data:', data); // Log the data for debugging
+        return data; // Return data directly as it comes from the API
       } catch (error) {
         console.error('Failed to fetch recent orders:', error);
-        return { recentOrders: [] };
+        return [];
       }
     },
     enabled: !!activeConnectionId,
@@ -196,21 +196,24 @@ export default function Dashboard() {
     );
   }
   
-  // Default empty data structures if no connections exist
-  const kpiData = analyticsData?.kpiData || {
+  // Process and use the data directly as it comes from the API
+  // Note: analyticsData is the direct KPI response (not nested in a kpiData property)
+  const kpiData = analyticsData || {
     dailyRevenue: 0,
     totalOrders: 0,
     repeatBuyerRate: 0,
     inventoryAlerts: []
   };
   
-  const storePerformance = performanceData?.storePerformance || {
+  // performanceData is directly the store performance data
+  const storePerformance = performanceData || {
     labels: [],
     datasets: []
   };
   
-  const topProducts = productsData?.topProducts || [];
-  const recentOrders = ordersData?.recentOrders || [];
+  // The products and orders are direct arrays from the API (not nested)
+  const topProducts = productsData || [];
+  const recentOrders = ordersData || [];
   
   const subscription = subscriptionData || {
     tier: { name: 'Free', maxOrders: 100 },
