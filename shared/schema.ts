@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
+  isAdmin: boolean("is_admin").default(false),
   currentPlanId: integer("current_plan_id").references(() => subscriptionTiers.id),
   allowedStoreCount: integer("allowed_store_count").default(1),
   lastLoginIp: text("last_login_ip"),

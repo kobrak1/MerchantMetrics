@@ -68,6 +68,11 @@ async function ensureUserTable() {
       await db.execute(sql`ALTER TABLE users ADD COLUMN last_login_ip TEXT`);
     }
     
+    if (!columns.includes('is_admin')) {
+      await db.execute(sql`ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT false`);
+      console.log('Added is_admin column to users table');
+    }
+    
     if (!columns.includes('last_login_at')) {
       await db.execute(sql`ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP`);
     }

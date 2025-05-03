@@ -452,24 +452,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const subscription = await storage.getUserSubscription(userId);
+      let subscription = await storage.getUserSubscription(userId);
       
+      // If no subscription, create a free trial
       if (!subscription) {
-        return res.status(404).json({ message: "No active subscription found" });
+        const tiers = await storage.getSubscriptionTiers();
+        const freeTier = tiers.find(t => t.name === 'Free Trial');
+        
+        if (!freeTier) {
+          return res.status(500).json({ message: "Free trial tier not found" });
+        }
+        
+        // Calculate trial end date (14 days from now)
+        const startDate = new Date();
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 14);
+        
+        const trialSubscription = {
+          userId,
+          tierId: freeTier.id,
+          startDate,
+          endDate,
+          isActive: true,
+          isTrial: true
+        };
+        
+        subscription = await storage.createUserSubscription(trialSubscription);
+        console.log('Created free trial subscription for user', userId);
       }
       
-      const tier = await storage.getSubscriptionTiers();
-      const userTier = tier.find(t => t.id === subscription.tierId);
+      const tiers = await storage.getSubscriptionTiers();
+      const userTier = tiers.find(t => t.id === subscription.tierId);
       
       if (!userTier) {
         return res.status(404).json({ message: "Subscription tier not found" });
       }
       
-      const totalOrders = 653; // Mock data for demo
+      // Check if trial has expired
+      let trialExpired = false;
+      if (subscription.isTrial && subscription.endDate) {
+        trialExpired = new Date(subscription.endDate) < new Date();
+      }
+      
+      // Get total orders for the user's stores
+      let totalOrders = 0;
+      const storeConnections = await storage.getStoreConnectionsByUserId(userId);
+      
+      for (const connection of storeConnections) {
+        const count = await storage.getOrdersCountByStoreConnection(connection.id);
+        totalOrders += count;
+      }
       
       res.status(200).json({
         subscription,
         tier: userTier,
+        trialExpired,
+        trialDaysLeft: subscription.isTrial && subscription.endDate ? 
+          Math.max(0, Math.floor((new Date(subscription.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 0,
         usage: {
           orders: totalOrders,
           maxOrders: userTier.maxOrders,
