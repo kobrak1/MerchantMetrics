@@ -9,7 +9,8 @@ import {
   kpiDataSchema,
   storePerformanceSchema,
   topProductSchema,
-  recentOrderSchema
+  recentOrderSchema,
+  User
 } from "@shared/schema";
 import { testShopifyConnection } from "./api/shopify";
 import { testMagentoConnection } from "./api/magento";
@@ -24,11 +25,12 @@ import { beginOAuth, completeOAuth, validateShopifyWebhook } from "./shopify/oau
 import { trackApiUsage, enforcePlanLimits } from "./middleware/limits";
 import { trackUserSession, expireInactiveSessions } from "./middleware/session-tracker";
 
-// Create a demo user for testing
+// Create demo and admin users for testing
 async function createDemoUser() {
   try {
-    const existingUser = await storage.getUserByEmail("demo@example.com");
-    if (!existingUser) {
+    // Create demo user if not exists
+    const existingDemoUser = await storage.getUserByEmail("demo@example.com");
+    if (!existingDemoUser) {
       // Create demo user with hashed password
       const hashedPassword = await hashPassword("demo123");
       await storage.createUser({
@@ -37,9 +39,29 @@ async function createDemoUser() {
         email: "demo@example.com",
         fullName: "John Smith"
       });
+      console.log("Demo user created successfully");
+    }
+
+    // Create admin user if not exists
+    const adminUsername = process.env.ADMIN_USERNAME || "admin";
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+    
+    const existingAdminUser = await storage.getUserByEmail(adminEmail);
+    if (!existingAdminUser) {
+      // Create admin user with hashed password
+      const hashedPassword = await hashPassword(adminPassword);
+      await storage.createUser({
+        username: adminUsername,
+        password: hashedPassword,
+        email: adminEmail,
+        fullName: "System Administrator",
+        isAdmin: true
+      });
+      console.log("Admin user created successfully");
     }
   } catch (error) {
-    console.error("Failed to create demo user:", error);
+    console.error("Failed to create users:", error);
   }
 }
 

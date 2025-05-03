@@ -23,6 +23,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   email: true,
   fullName: true,
+  isAdmin: true,
 });
 
 // Store connection schema
