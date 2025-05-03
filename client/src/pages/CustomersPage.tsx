@@ -44,6 +44,7 @@ export default function CustomersPage() {
     null
   );
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   // Fetch store connections
   const {
@@ -83,7 +84,13 @@ export default function CustomersPage() {
   });
 
   // Extract customers from the response
-  const customers = customersResponse?.customers || [];
+  const allCustomers = customersResponse?.customers || [];
+  
+  // Filter customers by name
+  const filteredCustomers = allCustomers.filter((customer: any) => {
+    const customerName = (customer.name || customer.id || "").toLowerCase();
+    return searchQuery === "" || customerName.includes(searchQuery.toLowerCase());
+  });
   
   // Fetch user subscription
   const {
@@ -144,7 +151,12 @@ export default function CustomersPage() {
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Customers</h1>
             <div className="flex gap-2">
-              <Input className="w-[250px]" placeholder="Search customers..." />
+              <Input 
+                className="w-[250px]" 
+                placeholder="Search customers..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
               <div className="flex rounded-md shadow-sm">
                 <Button 
                   variant={viewMode === "table" ? "default" : "outline"} 
@@ -168,11 +180,18 @@ export default function CustomersPage() {
             <div className="flex h-64 w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : customers.length === 0 ? (
+          ) : allCustomers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
               <p className="text-gray-500 mb-4">No customers found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
+              </Button>
+            </div>
+          ) : filteredCustomers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
+              <p className="text-gray-500 mb-4">No customers match your search</p>
+              <Button onClick={() => setSearchQuery("")} variant="outline">
+                Clear Search
               </Button>
             </div>
           ) : viewMode === "table" ? (
@@ -189,7 +208,7 @@ export default function CustomersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customers.map((customer: any) => (
+                  {filteredCustomers.map((customer: any) => (
                     <TableRow key={customer.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -213,7 +232,7 @@ export default function CustomersPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {customers.map((customer: any) => (
+              {filteredCustomers.map((customer: any) => (
                 <Card key={customer.id} className="overflow-hidden">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
