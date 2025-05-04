@@ -1,56 +1,47 @@
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "./use-auth";
-import { useToast } from "./use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-interface ProfileUpdateData {
+interface ProfileData {
   username?: string;
   email?: string;
   fullName?: string;
   currentPassword?: string;
   newPassword?: string;
+  profilePhoto?: string;
 }
 
 export function useProfile() {
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: ProfileUpdateData) => {
-      const res = await apiRequest("PATCH", "/api/user/profile", data);
-      const result = await res.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || "Failed to update profile");
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (profileData: ProfileData) => {
+      const response = await apiRequest("PATCH", "/api/user/profile", profileData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
       }
-      
-      return result.user;
+      return response.json();
     },
-    onSuccess: (updatedUser) => {
-      // Update the user in the cache
-      queryClient.setQueryData(["/api/user"], {
-        success: true,
-        user: updatedUser
-      });
-      
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data);
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update your profile. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   return {
-    user,
-    updateProfile: updateProfileMutation.mutate,
-    isUpdating: updateProfileMutation.isPending,
-    error: updateProfileMutation.error,
+    updateProfile: mutate,
+    isUpdating: isPending,
   };
 }

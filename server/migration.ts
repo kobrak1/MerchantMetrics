@@ -48,6 +48,7 @@ async function ensureUserTable() {
         password TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         full_name TEXT,
+        profile_photo TEXT,
         current_plan_id INTEGER,
         allowed_store_count INTEGER,
         last_login_ip TEXT,
@@ -83,6 +84,11 @@ async function ensureUserTable() {
     
     if (!columns.includes('current_plan_id')) {
       await db.execute(sql`ALTER TABLE users ADD COLUMN current_plan_id INTEGER`);
+    }
+    
+    if (!columns.includes('profile_photo')) {
+      await db.execute(sql`ALTER TABLE users ADD COLUMN profile_photo TEXT`);
+      console.log('Added profile_photo column to users table');
     }
   }
 }
@@ -269,7 +275,7 @@ async function checkTableExists(tableName: string): Promise<boolean> {
     )
   `);
   
-  return result.rows[0].exists;
+  return result.rows[0].exists as boolean;
 }
 
 /**

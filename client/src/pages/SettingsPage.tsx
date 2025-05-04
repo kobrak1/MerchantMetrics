@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useProfile } from "@/hooks/use-profile";
 import { useAuth } from "@/hooks/use-auth";
 import { useStoreConnections } from "@/hooks/use-store-connection";
@@ -7,7 +7,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { getInitials } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Camera, User, UserCircle, Mail, Lock, AlertCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -35,8 +35,8 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { User, UserCircle, Mail, Lock, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileFormSchema = z.object({
   username: z.string().min(3, {
@@ -71,6 +71,10 @@ export default function SettingsPage() {
   const { updateProfile, isUpdating } = useProfile();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("account");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(
+    user?.profilePhoto || null
+  );
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -90,8 +94,54 @@ export default function SettingsPage() {
     },
   });
 
+  // Handle click on the upload button
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle file upload
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 2MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setProfilePhotoPreview(result);
+      
+      // Update profile with the new photo
+      updateProfile({ profilePhoto: result });
+    };
+    reader.readAsDataURL(file);
+  };
+
   function onProfileSubmit(data: ProfileFormValues) {
-    updateProfile(data);
+    // Include the profile photo if it exists
+    updateProfile({
+      ...data,
+      profilePhoto: profilePhotoPreview || undefined,
+    });
   }
 
   function onPasswordSubmit(data: PasswordFormValues) {
@@ -233,6 +283,47 @@ export default function SettingsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {/* Profile Photo Upload */}
+                    <div className="mb-8 flex flex-col items-center">
+                      <div className="relative mb-4">
+                        <Avatar className="h-32 w-32 border-4 border-white shadow-md">
+                          <AvatarImage src={profilePhotoPreview || undefined} alt={user?.fullName || user?.username || "User"} />
+                          <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+                            {getInitials(user?.fullName || user?.username || "User")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button 
+                          size="icon" 
+                          variant="secondary" 
+                          className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full shadow-md"
+                          onClick={handleUploadClick}
+                          type="button"
+                        >
+                          <Camera className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleUploadClick}
+                        type="button"
+                        className="flex items-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Change Photo
+                      </Button>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        JPEG or PNG, max 2MB
+                      </p>
+                    </div>
+
                     <Form {...profileForm}>
                       <form
                         onSubmit={profileForm.handleSubmit(onProfileSubmit)}
