@@ -31,12 +31,14 @@ export default function OrdersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
-  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(null);
+  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(
+    null,
+  );
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
+
   // Fetch store connections
   const {
     storeConnections = [],
@@ -44,25 +46,27 @@ export default function OrdersPage() {
     activeConnectionId: hookActiveConnectionId,
     setActiveConnectionId: hookSetActiveConnectionId,
     addStoreConnection,
-    connectWithOAuth
+    connectWithOAuth,
   } = useStoreConnections();
 
   // Use the connection ID from the hook directly
   useEffect(() => {
-    if (hookActiveConnectionId !== null && hookActiveConnectionId !== undefined) {
+    if (
+      hookActiveConnectionId !== null &&
+      hookActiveConnectionId !== undefined
+    ) {
       setActiveConnectionId(hookActiveConnectionId);
     }
   }, [hookActiveConnectionId]);
 
   // Fetch orders data
-  const {
-    data: ordersResponse,
-    isLoading: isLoadingOrders,
-  } = useQuery({
+  const { data: ordersResponse, isLoading: isLoadingOrders } = useQuery({
     queryKey: ["/api/analytics/orders", activeConnectionId],
     queryFn: async () => {
       if (!activeConnectionId) return { orders: [] };
-      const res = await fetch(`/api/analytics/orders?storeConnectionId=${activeConnectionId}`);
+      const res = await fetch(
+        `/api/analytics/orders?storeConnectionId=${activeConnectionId}`,
+      );
       if (!res.ok) {
         throw new Error("Failed to fetch orders");
       }
@@ -70,25 +74,35 @@ export default function OrdersPage() {
     },
     enabled: !!activeConnectionId,
   });
-  
+
   // Extract orders from the response
   const allOrders = ordersResponse?.orders || [];
-  
+
   // Filter and sort orders
   const filteredOrders = allOrders
     .filter((order: any) => {
       // Status filter
-      if (statusFilter !== "all" && order.status.toLowerCase() !== statusFilter.toLowerCase()) {
+      if (
+        statusFilter !== "all" &&
+        order.status.toLowerCase() !== statusFilter.toLowerCase()
+      ) {
         return false;
       }
-      
+
       // Search filter (by order number/ID or customer)
       if (searchQuery) {
-        const orderNum = (order.orderNumber || order.orderId || "").toString().toLowerCase();
-        const customer = (order.customerName || order.customerId || "").toString().toLowerCase();
-        return orderNum.includes(searchQuery.toLowerCase()) || customer.includes(searchQuery.toLowerCase());
+        const orderNum = (order.orderNumber || order.orderId || "")
+          .toString()
+          .toLowerCase();
+        const customer = (order.customerName || order.customerId || "")
+          .toString()
+          .toLowerCase();
+        return (
+          orderNum.includes(searchQuery.toLowerCase()) ||
+          customer.includes(searchQuery.toLowerCase())
+        );
       }
-      
+
       return true;
     })
     .sort((a: any, b: any) => {
@@ -99,10 +113,7 @@ export default function OrdersPage() {
     });
 
   // Fetch user subscription
-  const {
-    data: subscription,
-    isLoading: isLoadingSubscription,
-  } = useQuery({
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
     queryKey: ["/api/user-subscription"],
     queryFn: async () => {
       const res = await fetch("/api/user-subscription");
@@ -119,7 +130,9 @@ export default function OrdersPage() {
     maxOrders: subscription?.subscription?.tier?.maxOrders || 1000,
     currentOrders: subscription?.orderCount || 0,
     percentUsed: subscription?.orderCount
-      ? (subscription.orderCount / subscription?.subscription?.tier?.maxOrders) * 100
+      ? (subscription.orderCount /
+          subscription?.subscription?.tier?.maxOrders) *
+        100
       : 0,
   };
 
@@ -134,10 +147,13 @@ export default function OrdersPage() {
     };
 
     const statusLower = status.toLowerCase();
-    const statusInfo = statusMap[statusLower] || { color: "gray", text: status };
+    const statusInfo = statusMap[statusLower] || {
+      color: "gray",
+      text: status,
+    };
 
     return (
-      <Badge 
+      <Badge
         className={`bg-${statusInfo.color}-100 text-${statusInfo.color}-800 border-${statusInfo.color}-200`}
       >
         {statusInfo.text}
@@ -146,18 +162,18 @@ export default function OrdersPage() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -172,11 +188,13 @@ export default function OrdersPage() {
   const toggleSortDirection = () => {
     setSortDirection(sortDirection === "desc" ? "asc" : "desc");
   };
-  
+
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen overflow-hidden bg-neutral-100">
       {/* Sidebar */}
-      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
+      <div
+        className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block absolute md:relative z-10 h-full`}
+      >
         <Sidebar
           storeConnections={storeConnections}
           activeConnectionId={activeConnectionId}
@@ -189,8 +207,8 @@ export default function OrdersPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-          title="Orders" 
-          userName={user?.fullName || user?.username || "User"} 
+          title="Orders"
+          userName={user?.fullName || user?.username || "User"}
           userInitials={getInitials(user?.fullName || user?.username || "User")}
           onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
@@ -199,8 +217,8 @@ export default function OrdersPage() {
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h1 className="text-2xl font-bold">Orders</h1>
             <div className="flex flex-wrap gap-2">
-              <Select 
-                value={statusFilter} 
+              <Select
+                value={statusFilter}
                 onValueChange={(value) => setStatusFilter(value)}
               >
                 <SelectTrigger className="w-[150px]">
@@ -215,15 +233,15 @@ export default function OrdersPage() {
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
-              <Input 
-                className="w-[250px]" 
+              <Input
+                className="w-[250px]"
                 placeholder="Search by order # or customer"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setSearchQuery("")}
                   className="px-2"
                 >
@@ -239,28 +257,31 @@ export default function OrdersPage() {
             </div>
           ) : allOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
-              <p className="text-gray-500 mb-4">No orders found for this store</p>
+              <p className="text-gray-500 mb-4">
+                No orders found for this store
+              </p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Order #</TableHead>
-                    <TableHead 
+                    <TableHead
                       className="cursor-pointer hover:bg-gray-50"
                       onClick={toggleSortDirection}
                     >
                       <div className="flex items-center gap-1">
                         <span>Date</span>
                         <span>
-                          {sortDirection === "desc" ? 
-                            <ArrowDown className="h-4 w-4" /> : 
+                          {sortDirection === "desc" ? (
+                            <ArrowDown className="h-4 w-4" />
+                          ) : (
                             <ArrowUp className="h-4 w-4" />
-                          }
+                          )}
                         </span>
                       </div>
                     </TableHead>
@@ -277,8 +298,8 @@ export default function OrdersPage() {
                         {searchQuery ? (
                           <div>
                             <p>No orders match your search criteria</p>
-                            <Button 
-                              variant="link" 
+                            <Button
+                              variant="link"
                               onClick={() => setSearchQuery("")}
                               className="mt-1"
                             >
@@ -288,8 +309,8 @@ export default function OrdersPage() {
                         ) : (
                           <div>
                             <p>No orders found with status: {statusFilter}</p>
-                            <Button 
-                              variant="link" 
+                            <Button
+                              variant="link"
                               onClick={() => setStatusFilter("all")}
                               className="mt-1"
                             >
@@ -302,13 +323,21 @@ export default function OrdersPage() {
                   ) : (
                     filteredOrders.map((order: any) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.orderNumber || order.orderId}</TableCell>
+                        <TableCell className="font-medium">
+                          {order.orderNumber || order.orderId}
+                        </TableCell>
                         <TableCell>{formatDate(order.orderDate)}</TableCell>
-                        <TableCell>{order.customerName || order.customerId}</TableCell>
+                        <TableCell>
+                          {order.customerName || order.customerId}
+                        </TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(order.totalAmount, order.currency)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="outline" size="sm">View Details</Button>
+                          {formatCurrency(order.totalAmount, order.currency)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))

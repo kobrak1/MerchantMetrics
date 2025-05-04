@@ -27,13 +27,13 @@ export default function DateFilter({
     <div className="mb-4 flex justify-between items-center">
       <h3 className="text-xl font-medium">Analytics Overview</h3>
 
-      <div className="flex items-center bg-white border border-neutral-200 dark:border-gray-400 rounded-lg shadow-sm">
+      <div className="flex items-center bg-white border border-neutral-200 rounded-none shadow-sm">
         <Button
           variant="ghost"
           className={`px-3 py-1.5 text-sm font-medium rounded-none ${
             activeFilter === "today"
               ? "text-primary border-b-2 border-primary"
-              : "text-neutral-500"
+              : "text-neutral-500 hover:border-b-2 hover:border-primary hover:rounded-none"
           }`}
           onClick={() => handleFilterChange("today")}
         >
@@ -45,7 +45,7 @@ export default function DateFilter({
           className={`px-3 py-1.5 text-sm font-medium rounded-none ${
             activeFilter === "week"
               ? "text-primary border-b-2 border-primary"
-              : "text-neutral-500"
+              : "text-neutral-500 text-neutral-500 hover:border-b-2 hover:border-primary hover:rounded-none"
           }`}
           onClick={() => handleFilterChange("week")}
         >
@@ -57,7 +57,7 @@ export default function DateFilter({
           className={`px-3 py-1.5 text-sm font-medium rounded-none ${
             activeFilter === "month"
               ? "text-primary border-b-2 border-primary"
-              : "text-neutral-500"
+              : "text-neutral-500 text-neutral-500 hover:border-b-2 hover:border-primary hover:rounded-none"
           }`}
           onClick={() => handleFilterChange("month")}
         >
@@ -69,7 +69,7 @@ export default function DateFilter({
           className={`px-3 py-1.5 text-sm flex items-center rounded-none ${
             activeFilter === "custom"
               ? "text-primary border-b-2 border-primary"
-              : "text-neutral-500"
+              : "text-neutral-500 text-neutral-500 hover:border-b-2 hover:border-primary hover:rounded-none"
           }`}
           onClick={() => handleFilterChange("custom")}
         >

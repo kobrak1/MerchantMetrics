@@ -20,12 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -39,14 +34,14 @@ export default function InventoryPage() {
   const { toast } = useToast();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [activeConnectionId, setActiveConnectionId] = useState<number | null>(
-    null
+    null,
   );
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
+
   // Fetch store connections
   const {
     storeConnections = [],
@@ -54,28 +49,38 @@ export default function InventoryPage() {
     activeConnectionId: hookActiveConnectionId,
     setActiveConnectionId: hookSetActiveConnectionId,
     addStoreConnection,
-    connectWithOAuth
+    connectWithOAuth,
   } = useStoreConnections();
 
   // Use the connection ID from the hook directly
   useEffect(() => {
-    if (hookActiveConnectionId !== null && hookActiveConnectionId !== undefined) {
-      console.log('InventoryPage - Setting active connection ID from hook:', hookActiveConnectionId);
+    if (
+      hookActiveConnectionId !== null &&
+      hookActiveConnectionId !== undefined
+    ) {
+      console.log(
+        "InventoryPage - Setting active connection ID from hook:",
+        hookActiveConnectionId,
+      );
       setActiveConnectionId(hookActiveConnectionId);
     }
   }, [hookActiveConnectionId]);
-  
-  console.log('InventoryPage state - activeConnectionId:', activeConnectionId, 'Hook connection ID:', hookActiveConnectionId);
+
+  console.log(
+    "InventoryPage state - activeConnectionId:",
+    activeConnectionId,
+    "Hook connection ID:",
+    hookActiveConnectionId,
+  );
 
   // Fetch products/inventory data
-  const {
-    data: productsResponse,
-    isLoading: isLoadingProducts,
-  } = useQuery({
+  const { data: productsResponse, isLoading: isLoadingProducts } = useQuery({
     queryKey: ["/api/analytics/products", activeConnectionId],
     queryFn: async () => {
       if (!activeConnectionId) return { products: [] };
-      const res = await fetch(`/api/analytics/products?storeConnectionId=${activeConnectionId}`);
+      const res = await fetch(
+        `/api/analytics/products?storeConnectionId=${activeConnectionId}`,
+      );
       if (!res.ok) {
         throw new Error("Failed to fetch products");
       }
@@ -86,42 +91,51 @@ export default function InventoryPage() {
 
   // Extract products from the response
   const allProducts = productsResponse?.products || [];
-  
+
   // Filter products based on search and status filters
   let filteredProducts = allProducts.filter((product: any) => {
     // Status filter
     if (statusFilter !== "all") {
-      if (statusFilter === "in-stock" && 
-          product.inventory !== null && 
-          product.inventory > 0 && 
-          (!product.lowStockThreshold || product.inventory > product.lowStockThreshold)) {
+      if (
+        statusFilter === "in-stock" &&
+        product.inventory !== null &&
+        product.inventory > 0 &&
+        (!product.lowStockThreshold ||
+          product.inventory > product.lowStockThreshold)
+      ) {
         // In stock: inventory > 0 and above low stock threshold
-      } else if (statusFilter === "low-stock" && 
-                product.inventory !== null && 
-                product.inventory > 0 && 
-                product.lowStockThreshold && 
-                product.inventory <= product.lowStockThreshold) {
+      } else if (
+        statusFilter === "low-stock" &&
+        product.inventory !== null &&
+        product.inventory > 0 &&
+        product.lowStockThreshold &&
+        product.inventory <= product.lowStockThreshold
+      ) {
         // Low stock: inventory > 0 but below or equal to threshold
-      } else if (statusFilter === "out-of-stock" && 
-                product.inventory !== null && 
-                product.inventory <= 0) {
+      } else if (
+        statusFilter === "out-of-stock" &&
+        product.inventory !== null &&
+        product.inventory <= 0
+      ) {
         // Out of stock: inventory is 0 or negative
       } else {
         return false;
       }
     }
-    
+
     // Search query filter
     if (searchQuery) {
       const productName = (product.name || "").toLowerCase();
       const productSku = (product.sku || "").toLowerCase();
-      return productName.includes(searchQuery.toLowerCase()) || 
-             productSku.includes(searchQuery.toLowerCase());
+      return (
+        productName.includes(searchQuery.toLowerCase()) ||
+        productSku.includes(searchQuery.toLowerCase())
+      );
     }
-    
+
     return true;
   });
-  
+
   // Sort products if required
   if (sortBy === "price") {
     filteredProducts = [...filteredProducts].sort((a: any, b: any) => {
@@ -130,29 +144,26 @@ export default function InventoryPage() {
       return sortDirection === "asc" ? priceA - priceB : priceB - priceA;
     });
   }
-  
+
   // Fetch low stock products
-  const {
-    data: lowStockProducts = [],
-    isLoading: isLoadingLowStock,
-  } = useQuery({
-    queryKey: ["/api/analytics/low-stock-products", activeConnectionId],
-    queryFn: async () => {
-      if (!activeConnectionId) return [];
-      const res = await fetch(`/api/analytics/low-stock-products?storeConnectionId=${activeConnectionId}`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch low stock products");
-      }
-      return res.json();
-    },
-    enabled: !!activeConnectionId,
-  });
+  const { data: lowStockProducts = [], isLoading: isLoadingLowStock } =
+    useQuery({
+      queryKey: ["/api/analytics/low-stock-products", activeConnectionId],
+      queryFn: async () => {
+        if (!activeConnectionId) return [];
+        const res = await fetch(
+          `/api/analytics/low-stock-products?storeConnectionId=${activeConnectionId}`,
+        );
+        if (!res.ok) {
+          throw new Error("Failed to fetch low stock products");
+        }
+        return res.json();
+      },
+      enabled: !!activeConnectionId,
+    });
 
   // Fetch user subscription
-  const {
-    data: subscription,
-    isLoading: isLoadingSubscription,
-  } = useQuery({
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
     queryKey: ["/api/user-subscription"],
     queryFn: async () => {
       const res = await fetch("/api/user-subscription");
@@ -169,14 +180,16 @@ export default function InventoryPage() {
     maxOrders: subscription?.subscription?.tier?.maxOrders || 1000,
     currentOrders: subscription?.orderCount || 0,
     percentUsed: subscription?.orderCount
-      ? (subscription.orderCount / subscription?.subscription?.tier?.maxOrders) * 100
+      ? (subscription.orderCount /
+          subscription?.subscription?.tier?.maxOrders) *
+        100
       : 0,
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     }).format(amount);
   };
 
@@ -185,18 +198,31 @@ export default function InventoryPage() {
     if (!product.inventory && product.inventory !== 0) {
       return <Badge variant="outline">Not Tracked</Badge>;
     }
-    
+
     if (product.inventory <= 0) {
       return <Badge variant="destructive">Out of Stock</Badge>;
     }
-    
-    const isLowStock = product.lowStockThreshold && product.inventory <= product.lowStockThreshold;
-    
+
+    const isLowStock =
+      product.lowStockThreshold &&
+      product.inventory <= product.lowStockThreshold;
+
     if (isLowStock) {
-      return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Low Stock</Badge>;
+      return (
+        <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+          Low Stock
+        </Badge>
+      );
     }
-    
-    return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">In Stock</Badge>;
+
+    return (
+      <Badge
+        variant="outline"
+        className="bg-green-100 text-green-800 border-green-200"
+      >
+        In Stock
+      </Badge>
+    );
   };
 
   // Calculate stock level percentage for progress bar
@@ -204,20 +230,22 @@ export default function InventoryPage() {
     if (!product.inventory && product.inventory !== 0) {
       return 100; // Not tracked
     }
-    
+
     if (product.inventory <= 0) {
       return 0; // Out of stock
     }
-    
+
     if (product.lowStockThreshold) {
       // When threshold is set, use it to calculate percentage
       // Consider 2x threshold as "full" stock for visual purposes
       const maxLevel = product.lowStockThreshold * 2;
       return Math.min(Math.round((product.inventory / maxLevel) * 100), 100);
     }
-    
+
     // Default assumption if no threshold
-    return product.inventory > 10 ? 100 : Math.round((product.inventory / 10) * 100);
+    return product.inventory > 10
+      ? 100
+      : Math.round((product.inventory / 10) * 100);
   };
 
   if (isLoadingConnections || isLoadingSubscription) {
@@ -227,7 +255,7 @@ export default function InventoryPage() {
       </div>
     );
   }
-  
+
   // Handle price column sorting
   const handlePriceSortClick = () => {
     if (sortBy === "price") {
@@ -239,11 +267,13 @@ export default function InventoryPage() {
       setSortDirection("desc");
     }
   };
-  
+
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen overflow-hidden bg-neutral-200">
       {/* Sidebar */}
-      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
+      <div
+        className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block absolute md:relative z-10 h-full`}
+      >
         <Sidebar
           storeConnections={storeConnections}
           activeConnectionId={activeConnectionId}
@@ -256,8 +286,8 @@ export default function InventoryPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-          title="Inventory" 
-          userName={user?.fullName || user?.username || "User"} 
+          title="Inventory"
+          userName={user?.fullName || user?.username || "User"}
           userInitials={getInitials(user?.fullName || user?.username || "User")}
           onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
@@ -266,8 +296,8 @@ export default function InventoryPage() {
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h1 className="text-2xl font-bold">Inventory</h1>
             <div className="flex flex-wrap gap-2">
-              <Select 
-                value={statusFilter} 
+              <Select
+                value={statusFilter}
                 onValueChange={(value) => setStatusFilter(value)}
               >
                 <SelectTrigger className="w-[150px]">
@@ -280,15 +310,15 @@ export default function InventoryPage() {
                   <SelectItem value="out-of-stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
-              <Input 
-                className="w-[250px]" 
-                placeholder="Search products..." 
+              <Input
+                className="w-[250px]"
+                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setSearchQuery("")}
                   className="px-2"
                 >
@@ -310,7 +340,10 @@ export default function InventoryPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {lowStockProducts.slice(0, 3).map((product: any) => (
-                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                    <div
+                      key={product.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border"
+                    >
                       <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
                         {product.name.substring(0, 2).toUpperCase()}
                       </div>
@@ -320,7 +353,10 @@ export default function InventoryPage() {
                           <span className="text-sm text-gray-500">
                             {product.inventory} in stock
                           </span>
-                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
+                          <Badge
+                            variant="outline"
+                            className="bg-amber-100 text-amber-800 border-amber-200"
+                          >
                             Low Stock
                           </Badge>
                         </div>
@@ -345,7 +381,9 @@ export default function InventoryPage() {
             </div>
           ) : allProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
-              <p className="text-gray-500 mb-4">No products found for this store</p>
+              <p className="text-gray-500 mb-4">
+                No products found for this store
+              </p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
@@ -357,7 +395,7 @@ export default function InventoryPage() {
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
-                    <TableHead 
+                    <TableHead
                       className="cursor-pointer hover:bg-gray-50"
                       onClick={handlePriceSortClick}
                     >
@@ -365,10 +403,11 @@ export default function InventoryPage() {
                         <span>Price</span>
                         {sortBy === "price" && (
                           <span className="ml-1">
-                            {sortDirection === "asc" ? 
-                              <ArrowUp className="h-4 w-4" /> : 
+                            {sortDirection === "asc" ? (
+                              <ArrowUp className="h-4 w-4" />
+                            ) : (
                               <ArrowDown className="h-4 w-4" />
-                            }
+                            )}
                           </span>
                         )}
                       </div>
@@ -385,8 +424,8 @@ export default function InventoryPage() {
                         {searchQuery ? (
                           <div>
                             <p>No products match your search criteria</p>
-                            <Button 
-                              variant="link" 
+                            <Button
+                              variant="link"
                               onClick={() => setSearchQuery("")}
                               className="mt-1"
                             >
@@ -396,8 +435,8 @@ export default function InventoryPage() {
                         ) : (
                           <div>
                             <p>No products found with status: {statusFilter}</p>
-                            <Button 
-                              variant="link" 
+                            <Button
+                              variant="link"
                               onClick={() => setStatusFilter("all")}
                               className="mt-1"
                             >
@@ -410,30 +449,47 @@ export default function InventoryPage() {
                   ) : (
                     filteredProducts.map((product: any) => (
                       <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {product.name}
+                        </TableCell>
                         <TableCell>{product.sku || "—"}</TableCell>
-                        <TableCell>{formatCurrency(product.price || 0, product.currency || "USD")}</TableCell>
+                        <TableCell>
+                          {formatCurrency(
+                            product.price || 0,
+                            product.currency || "USD",
+                          )}
+                        </TableCell>
                         <TableCell>{getStockStatus(product)}</TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <div className="flex justify-between text-sm">
                               <span>{product.inventory || "Not tracked"}</span>
                               {product.lowStockThreshold && (
-                                <span className="text-gray-500">Threshold: {product.lowStockThreshold}</span>
+                                <span className="text-gray-500">
+                                  Threshold: {product.lowStockThreshold}
+                                </span>
                               )}
                             </div>
                             {product.inventory !== null && (
-                              <Progress 
-                                value={getStockPercentage(product)} 
-                                className={product.inventory <= 0 ? "bg-red-100" : 
-                                  (product.lowStockThreshold && product.inventory <= product.lowStockThreshold) ? 
-                                    "bg-amber-100" : "bg-green-100"}
+                              <Progress
+                                value={getStockPercentage(product)}
+                                className={
+                                  product.inventory <= 0
+                                    ? "bg-red-100"
+                                    : product.lowStockThreshold &&
+                                        product.inventory <=
+                                          product.lowStockThreshold
+                                      ? "bg-amber-100"
+                                      : "bg-green-100"
+                                }
                               />
                             )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="outline" size="sm">Update Stock</Button>
+                          <Button variant="outline" size="sm">
+                            Update Stock
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))

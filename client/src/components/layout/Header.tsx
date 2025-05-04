@@ -56,28 +56,16 @@ export default function Header({
       </div>
 
       <div className="flex items-center">
-        {/* Notification button */}
-        <div className="mr-4 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-neutral-100"
-          >
-            <BellIcon className="h-5 w-5 text-neutral-400" />
-          </Button>
-          <span className="absolute top-0 right-0 h-2 w-2 bg-secondary rounded-full"></span>
-        </div>
-
         {/* User dropdown menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center cursor-pointer hover:bg-gray-50 rounded-full p-1 transition-colors">
+            <div className="flex items-center cursor-pointer hover:bg-gray-50 rounded-full p-1 mr-4 transition-colors">
               <Avatar className="h-8 w-8 mr-2 bg-primary">
-                <AvatarFallback>{userInitials}</AvatarFallback>
+                <AvatarFallback className="text-neutral-200">
+                  {userInitials}{" "}
+                </AvatarFallback>
               </Avatar>
-              <span className="hidden md:block">
-                {userName}
-              </span>
+              <span className="hidden md:block">{userName}</span>
               <ChevronDown className="ml-1 h-4 w-4 text-gray-500 hidden md:block" />
             </div>
           </DropdownMenuTrigger>

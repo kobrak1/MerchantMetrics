@@ -124,88 +124,92 @@ export default function Sidebar({
               Connected Stores
             </p>
           )}
-
-          {storeConnections.map((connection) => (
-            <div
-              key={connection.id}
-              className={cn(
-                "group flex items-center justify-between mb-2 p-2 rounded",
-                "bg-primary bg-opacity-20 hover:bg-opacity-30",
-                activeConnectionId === connection.id && "bg-opacity-40",
-              )}
-            >
+          
+          <div className={cn(
+            storeConnections.length > 4 && isExpanded ? "max-h-64 overflow-y-auto pr-1 custom-scrollbar" : ""
+          )}>
+            {storeConnections.map((connection) => (
               <div
-                className="flex items-center cursor-pointer"
-                onClick={() => onConnectionChange(connection.id)}
+                key={connection.id}
+                className={cn(
+                  "group flex items-center justify-between mb-2 p-2 rounded",
+                  "bg-primary bg-opacity-20 hover:bg-opacity-30",
+                  activeConnectionId === connection.id && "bg-opacity-40",
+                )}
               >
                 <div
-                  className={cn(
-                    "h-2 w-2 rounded-full mr-2",
-                    connection.isActive ? "bg-success" : "bg-destructive",
+                  className="flex items-center cursor-pointer"
+                  onClick={() => onConnectionChange(connection.id)}
+                >
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full mr-2",
+                      connection.isActive ? "bg-success" : "bg-destructive",
+                    )}
+                  />
+                  {isExpanded ? (
+                    <span className="text-sm truncate">
+                      {connection.name} ({connection.platform})
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold">
+                      {connection.name.substring(0, 1)}
+                    </span>
                   )}
-                />
-                {isExpanded ? (
-                  <span className="text-sm truncate">
-                    {connection.name} ({connection.platform})
-                  </span>
-                ) : (
-                  <span className="text-xs font-bold">
-                    {connection.name.substring(0, 1)}
-                  </span>
+                </div>
+
+                {isExpanded && (
+                  <AlertDialog
+                    open={isConfirmOpen && storeToRemove === connection.id}
+                    onOpenChange={(open) => {
+                      setIsConfirmOpen(open);
+                      if (!open) setStoreToRemove(null);
+                    }}
+                  >
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering the parent's onClick
+                          setStoreToRemove(connection.id);
+                          setIsConfirmOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          Remove Store
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to remove{" "}
+                          <strong>{connection.name}</strong>? This will disconnect
+                          your store and remove all associated data. This action
+                          cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-500 text-white hover:bg-red-600"
+                          onClick={handleRemoveStore}
+                        >
+                          Remove Store
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
-
-              {isExpanded && (
-                <AlertDialog
-                  open={isConfirmOpen && storeToRemove === connection.id}
-                  onOpenChange={(open) => {
-                    setIsConfirmOpen(open);
-                    if (!open) setStoreToRemove(null);
-                  }}
-                >
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering the parent's onClick
-                        setStoreToRemove(connection.id);
-                        setIsConfirmOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="dark:bg-gray-800 dark:text-white">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                        Remove Store
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="dark:text-gray-300">
-                        Are you sure you want to remove{" "}
-                        <strong>{connection.name}</strong>? This will disconnect
-                        your store and remove all associated data. This action
-                        cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-red-500 dark:bg-red-500 text-white hover:bg-red-600 dark:hover:bg-red-600"
-                        onClick={handleRemoveStore}
-                      >
-                        Remove Store
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
 
           <Button
             variant="ghost"

@@ -40,11 +40,13 @@ export default function CustomersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
-  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(null);
+  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
+
   // Fetch store connections
   const {
     storeConnections = [],
@@ -52,28 +54,38 @@ export default function CustomersPage() {
     activeConnectionId: hookActiveConnectionId,
     setActiveConnectionId: hookSetActiveConnectionId,
     addStoreConnection,
-    connectWithOAuth
+    connectWithOAuth,
   } = useStoreConnections();
 
   // Use the connection ID from the hook directly
   useEffect(() => {
-    if (hookActiveConnectionId !== null && hookActiveConnectionId !== undefined) {
-      console.log('CustomersPage - Setting active connection ID from hook:', hookActiveConnectionId);
+    if (
+      hookActiveConnectionId !== null &&
+      hookActiveConnectionId !== undefined
+    ) {
+      console.log(
+        "CustomersPage - Setting active connection ID from hook:",
+        hookActiveConnectionId,
+      );
       setActiveConnectionId(hookActiveConnectionId);
     }
   }, [hookActiveConnectionId]);
-  
-  console.log('CustomersPage state - activeConnectionId:', activeConnectionId, 'Hook connection ID:', hookActiveConnectionId);
+
+  console.log(
+    "CustomersPage state - activeConnectionId:",
+    activeConnectionId,
+    "Hook connection ID:",
+    hookActiveConnectionId,
+  );
 
   // Fetch customers data
-  const {
-    data: customersResponse,
-    isLoading: isLoadingCustomers,
-  } = useQuery({
+  const { data: customersResponse, isLoading: isLoadingCustomers } = useQuery({
     queryKey: ["/api/analytics/customers", activeConnectionId],
     queryFn: async () => {
       if (!activeConnectionId) return { customers: [] };
-      const res = await fetch(`/api/analytics/customers?storeConnectionId=${activeConnectionId}`);
+      const res = await fetch(
+        `/api/analytics/customers?storeConnectionId=${activeConnectionId}`,
+      );
       if (!res.ok) {
         throw new Error("Failed to fetch customers");
       }
@@ -84,18 +96,17 @@ export default function CustomersPage() {
 
   // Extract customers from the response
   const allCustomers = customersResponse?.customers || [];
-  
+
   // Filter customers by name
   const filteredCustomers = allCustomers.filter((customer: any) => {
     const customerName = (customer.name || customer.id || "").toLowerCase();
-    return searchQuery === "" || customerName.includes(searchQuery.toLowerCase());
+    return (
+      searchQuery === "" || customerName.includes(searchQuery.toLowerCase())
+    );
   });
-  
+
   // Fetch user subscription
-  const {
-    data: subscription,
-    isLoading: isLoadingSubscription,
-  } = useQuery({
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery({
     queryKey: ["/api/user-subscription"],
     queryFn: async () => {
       const res = await fetch("/api/user-subscription");
@@ -112,14 +123,16 @@ export default function CustomersPage() {
     maxOrders: subscription?.subscription?.tier?.maxOrders || 1000,
     currentOrders: subscription?.orderCount || 0,
     percentUsed: subscription?.orderCount
-      ? (subscription.orderCount / subscription?.subscription?.tier?.maxOrders) * 100
+      ? (subscription.orderCount /
+          subscription?.subscription?.tier?.maxOrders) *
+        100
       : 0,
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     }).format(amount);
   };
 
@@ -130,11 +143,13 @@ export default function CustomersPage() {
       </div>
     );
   }
-  
+
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-100">
+    <div className="flex h-screen overflow-hidden bg-neutral-200">
       {/* Sidebar */}
-      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
+      <div
+        className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block absolute md:relative z-10 h-full`}
+      >
         <Sidebar
           storeConnections={storeConnections}
           activeConnectionId={activeConnectionId}
@@ -147,8 +162,8 @@ export default function CustomersPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-          title="Customers" 
-          userName={user?.fullName || user?.username || "User"} 
+          title="Customers"
+          userName={user?.fullName || user?.username || "User"}
           userInitials={getInitials(user?.fullName || user?.username || "User")}
           onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
@@ -157,22 +172,22 @@ export default function CustomersPage() {
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h1 className="text-2xl font-bold">Customers</h1>
             <div className="flex flex-wrap gap-2">
-              <Input 
-                className="w-[250px]" 
-                placeholder="Search customers..." 
+              <Input
+                className="w-[250px]"
+                placeholder="Search customers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <div className="flex rounded-md shadow-sm">
-                <Button 
-                  variant={viewMode === "table" ? "default" : "outline"} 
+                <Button
+                  variant={viewMode === "table" ? "default" : "outline"}
                   className="rounded-l-md rounded-r-none"
                   onClick={() => setViewMode("table")}
                 >
                   Table
                 </Button>
-                <Button 
-                  variant={viewMode === "grid" ? "default" : "outline"} 
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
                   className="rounded-r-md rounded-l-none"
                   onClick={() => setViewMode("grid")}
                 >
@@ -188,14 +203,18 @@ export default function CustomersPage() {
             </div>
           ) : allCustomers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
-              <p className="text-gray-500 mb-4">No customers found for this store</p>
+              <p className="text-gray-500 mb-4">
+                No customers found for this store
+              </p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : filteredCustomers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
-              <p className="text-gray-500 mb-4">No customers match your search</p>
+              <p className="text-gray-500 mb-4">
+                No customers match your search
+              </p>
               <Button onClick={() => setSearchQuery("")} variant="outline">
                 Clear Search
               </Button>
@@ -219,17 +238,30 @@ export default function CustomersPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
-                            <AvatarFallback>{getInitials(customer.name || "")}</AvatarFallback>
+                            <AvatarFallback>
+                              {getInitials(customer.name || "")}
+                            </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">{customer.name || customer.id}</span>
+                          <span className="font-medium">
+                            {customer.name || customer.id}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>{customer.email || "N/A"}</TableCell>
                       <TableCell>{customer.location || "N/A"}</TableCell>
-                      <TableCell className="text-right">{customer.orderCount || 0}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(customer.totalSpent || 0, customer.currency || "USD")}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm">View Details</Button>
+                        {customer.orderCount || 0}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          customer.totalSpent || 0,
+                          customer.currency || "USD",
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -244,16 +276,22 @@ export default function CustomersPage() {
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback>{getInitials(customer.name || "")}</AvatarFallback>
+                          <AvatarFallback>
+                            {getInitials(customer.name || "")}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <CardTitle>{customer.name || customer.id}</CardTitle>
-                          <CardDescription>{customer.email || "No email available"}</CardDescription>
+                          <CardDescription>
+                            {customer.email || "No email available"}
+                          </CardDescription>
                         </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">•••</Button>
+                          <Button variant="ghost" size="sm">
+                            •••
+                          </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -294,7 +332,12 @@ export default function CustomersPage() {
                     </div>
                     <div>
                       <span className="text-sm text-gray-500">Total Spent</span>
-                      <p className="font-medium">{formatCurrency(customer.totalSpent || 0, customer.currency || "USD")}</p>
+                      <p className="font-medium">
+                        {formatCurrency(
+                          customer.totalSpent || 0,
+                          customer.currency || "USD",
+                        )}
+                      </p>
                     </div>
                   </CardFooter>
                 </Card>
