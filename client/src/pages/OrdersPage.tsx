@@ -35,6 +35,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Fetch store connections
   const {
@@ -171,8 +172,6 @@ export default function OrdersPage() {
   const toggleSortDirection = () => {
     setSortDirection(sortDirection === "desc" ? "asc" : "desc");
   };
-
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">

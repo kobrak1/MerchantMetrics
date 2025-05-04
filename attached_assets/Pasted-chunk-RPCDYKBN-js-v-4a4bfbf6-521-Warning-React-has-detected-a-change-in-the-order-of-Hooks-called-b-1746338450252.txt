@@ -1,0 +1,83 @@
+chunk-RPCDYKBN.js?v=4a4bfbf6:521 Warning: React has detected a change in the order of Hooks called by OrdersPage. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useContext                 useContext
+2. useState                   useState
+3. useEffect                  useEffect
+4. useState                   useState
+5. useState                   useState
+6. useState                   useState
+7. useState                   useState
+8. useState                   useState
+9. useState                   useState
+10. useState                  useState
+11. useState                  useState
+12. useContext                useContext
+13. useState                  useState
+14. useEffect                 useEffect
+15. useContext                useContext
+16. useContext                useContext
+17. useContext                useContext
+18. useEffect                 useEffect
+19. useState                  useState
+20. useCallback               useCallback
+21. useSyncExternalStore      useSyncExternalStore
+22. useEffect                 useEffect
+23. useEffect                 useEffect
+24. useEffect                 useEffect
+25. useEffect                 useEffect
+26. useContext                useContext
+27. useContext                useContext
+28. useContext                useContext
+29. useEffect                 useEffect
+30. useState                  useState
+31. useCallback               useCallback
+32. useSyncExternalStore      useSyncExternalStore
+33. useEffect                 useEffect
+34. useContext                useContext
+35. useContext                useContext
+36. useContext                useContext
+37. useEffect                 useEffect
+38. useState                  useState
+39. useCallback               useCallback
+40. useSyncExternalStore      useSyncExternalStore
+41. useEffect                 useEffect
+42. undefined                 useState
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at OrdersPage (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/pages/OrdersPage.tsx:48:20)
+    at Route (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:323:16)
+    at ProtectedRoute (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/App.tsx?v=uDXU2SpSkIdTHibr41mh8:33:3)
+    at Switch (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:379:17)
+    at Router
+    at Provider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a4bfbf6:38:15)
+    at TooltipProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4a4bfbf6:62:5)
+    at AuthProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4a4bfbf6:2805:3)
+    at App
+    at V (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:44:25)
+    at J (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:42:18)
+
+2
+chunk-RPCDYKBN.js?v=4a4bfbf6:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at OrdersPage (OrdersPage.tsx:175:57)
+chunk-RPCDYKBN.js?v=4a4bfbf6:14032 The above error occurred in the <OrdersPage> component:
+
+    at OrdersPage (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/pages/OrdersPage.tsx:48:20)
+    at Route (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:323:16)
+    at ProtectedRoute (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/App.tsx?v=uDXU2SpSkIdTHibr41mh8:33:3)
+    at Switch (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:379:17)
+    at Router
+    at Provider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a4bfbf6:38:15)
+    at TooltipProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4a4bfbf6:62:5)
+    at AuthProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4a4bfbf6:2805:3)
+    at App
+    at V (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:44:25)
+    at J (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:42:18)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-RPCDYKBN.js?v=4a4bfbf6:19413 Uncaught Error: Rendered more hooks than during the previous render.
+    at OrdersPage (OrdersPage.tsx:175:57)
