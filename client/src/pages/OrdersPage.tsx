@@ -7,7 +7,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import ConnectStoreModal from "@/components/modals/ConnectStoreModal";
 import { getInitials } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -31,9 +31,10 @@ export default function OrdersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
-  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(
-    null
-  );
+  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
   // Fetch store connections
   const {
@@ -48,12 +49,9 @@ export default function OrdersPage() {
   // Use the connection ID from the hook directly
   useEffect(() => {
     if (hookActiveConnectionId !== null && hookActiveConnectionId !== undefined) {
-      console.log('Setting active connection ID from hook:', hookActiveConnectionId);
       setActiveConnectionId(hookActiveConnectionId);
     }
   }, [hookActiveConnectionId]);
-  
-  console.log('OrdersPage state - activeConnectionId:', activeConnectionId, 'Hook connection ID:', hookActiveConnectionId);
 
   // Fetch orders data
   const {
@@ -73,8 +71,31 @@ export default function OrdersPage() {
   });
   
   // Extract orders from the response
-  const orders = ordersResponse?.orders || [];
-  console.log('Orders data:', ordersResponse, 'Extracted orders:', orders);
+  const allOrders = ordersResponse?.orders || [];
+  
+  // Filter and sort orders
+  const filteredOrders = allOrders
+    .filter((order: any) => {
+      // Status filter
+      if (statusFilter !== "all" && order.status.toLowerCase() !== statusFilter.toLowerCase()) {
+        return false;
+      }
+      
+      // Search filter (by order number/ID or customer)
+      if (searchQuery) {
+        const orderNum = (order.orderNumber || order.orderId || "").toString().toLowerCase();
+        const customer = (order.customerName || order.customerId || "").toString().toLowerCase();
+        return orderNum.includes(searchQuery.toLowerCase()) || customer.includes(searchQuery.toLowerCase());
+      }
+      
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      // Sort by date
+      const dateA = new Date(a.orderDate).getTime();
+      const dateB = new Date(b.orderDate).getTime();
+      return sortDirection === "desc" ? dateB - dateA : dateA - dateB;
+    });
 
   // Fetch user subscription
   const {
@@ -147,6 +168,10 @@ export default function OrdersPage() {
     );
   }
 
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === "desc" ? "asc" : "desc");
+  };
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar
@@ -166,7 +191,10 @@ export default function OrdersPage() {
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Orders</h1>
             <div className="flex gap-2">
-              <Select defaultValue="all">
+              <Select 
+                value={statusFilter} 
+                onValueChange={(value) => setStatusFilter(value)}
+              >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -179,7 +207,21 @@ export default function OrdersPage() {
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
-              <Input className="w-[250px]" placeholder="Search by order # or customer" />
+              <Input 
+                className="w-[250px]" 
+                placeholder="Search by order # or customer"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchQuery("")}
+                  className="px-2"
+                >
+                  Clear
+                </Button>
+              )}
             </div>
           </div>
 
@@ -187,7 +229,7 @@ export default function OrdersPage() {
             <div className="flex h-64 w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : orders.length === 0 ? (
+          ) : allOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
               <p className="text-gray-500 mb-4">No orders found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
@@ -200,7 +242,15 @@ export default function OrdersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Order #</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:text-primary flex items-center gap-1"
+                      onClick={toggleSortDirection}
+                    >
+                      Date {sortDirection === "desc" ? 
+                        <ArrowDown className="h-4 w-4" /> : 
+                        <ArrowUp className="h-4 w-4" />
+                      }
+                    </TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
@@ -208,18 +258,48 @@ export default function OrdersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order: any) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.orderNumber || order.orderId}</TableCell>
-                      <TableCell>{formatDate(order.orderDate)}</TableCell>
-                      <TableCell>{order.customerName || order.customerId}</TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(order.totalAmount, order.currency)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="outline" size="sm">View Details</Button>
+                  {filteredOrders.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        {searchQuery ? (
+                          <div>
+                            <p>No orders match your search criteria</p>
+                            <Button 
+                              variant="link" 
+                              onClick={() => setSearchQuery("")}
+                              className="mt-1"
+                            >
+                              Clear search
+                            </Button>
+                          </div>
+                        ) : (
+                          <div>
+                            <p>No orders found with status: {statusFilter}</p>
+                            <Button 
+                              variant="link" 
+                              onClick={() => setStatusFilter("all")}
+                              className="mt-1"
+                            >
+                              Show all orders
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredOrders.map((order: any) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.orderNumber || order.orderId}</TableCell>
+                        <TableCell>{formatDate(order.orderDate)}</TableCell>
+                        <TableCell>{order.customerName || order.customerId}</TableCell>
+                        <TableCell>{getStatusBadge(order.status)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(order.totalAmount, order.currency)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm">View Details</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
