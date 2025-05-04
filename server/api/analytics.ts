@@ -114,11 +114,13 @@ export async function getStorePerformance(
   period: string = 'week'
 ): Promise<{ labels: string[], datasets: { label: string, data: number[] }[] }> {
   const now = new Date();
-  const labels: string[] = [];
+  let labels: string[] = [];
   const datasets: { label: string, data: number[] }[] = [];
   
   // Determine the period to display
   let days: number;
+  let aggregateWeekly = false;
+  
   switch (period) {
     case 'today':
       days = 1;
@@ -131,38 +133,42 @@ export async function getStorePerformance(
       break;
     case 'quarter':
       days = 90;
+      aggregateWeekly = true; // Aggregate data weekly for quarter view
       break;
     default:
       days = 7; // Default to a week
   }
-  
-  // Generate date labels for the selected period
-  for (let i = days - 1; i >= 0; i--) {
-    const date = subDays(now, i);
-    
-    // Format date labels differently based on the period
-    if (days === 1) {
-      // For today, show hourly data
-      const hour = new Date(now);
-      hour.setHours(now.getHours() - i, 0, 0, 0);
-      labels.push(format(hour, 'ha')); // Format as 1PM, 2PM, etc.
-    } else if (days <= 14) {
-      // For short periods (up to 2 weeks), show full date
-      labels.push(format(date, 'MMM dd'));
-    } else if (days <= 31) {
-      // For month view, show every 5 days or only specific days
-      // Skip some labels to prevent overcrowding
-      if (i % 5 === 0 || i === 0 || i === days - 1) {
+
+  if (aggregateWeekly) {
+    // For quarter view, generate weekly labels (approximately 13 labels)
+    const weekCount = Math.ceil(days / 7);
+    for (let i = 0; i < weekCount; i++) {
+      const startDate = subDays(now, days - (i * 7));
+      const endDate = subDays(now, Math.max(days - ((i + 1) * 7) + 1, 0));
+      labels.push(format(startDate, 'MMM dd') + ' - ' + format(endDate, 'MMM dd'));
+    }
+  } else {
+    // For other views, generate daily labels
+    for (let i = days - 1; i >= 0; i--) {
+      const date = subDays(now, i);
+      
+      // Format date labels differently based on the period
+      if (days === 1) {
+        // For today, show hourly data
+        const hour = new Date(now);
+        hour.setHours(now.getHours() - i, 0, 0, 0);
+        labels.push(format(hour, 'ha')); // Format as 1PM, 2PM, etc.
+      } else if (days <= 14) {
+        // For short periods (up to 2 weeks), show full date
         labels.push(format(date, 'MMM dd'));
-      } else {
-        labels.push(''); // Empty label for days we want to skip
-      }
-    } else {
-      // For quarter view, show every 15 days or only month starts
-      if (i % 15 === 0 || i === 0 || i === days - 1 || date.getDate() === 1) {
-        labels.push(format(date, 'MMM dd'));
-      } else {
-        labels.push(''); // Empty label
+      } else if (days <= 31) {
+        // For month view, show every 5 days or only specific days
+        // Skip some labels to prevent overcrowding
+        if (i % 5 === 0 || i === 0 || i === days - 1) {
+          labels.push(format(date, 'MMM dd'));
+        } else {
+          labels.push(''); // Empty label for days we want to skip
+        }
       }
     }
   }
@@ -172,28 +178,27 @@ export async function getStorePerformance(
     const connection = await storage.getStoreConnection(connectionId);
     if (!connection) continue;
     
-    const data: number[] = [];
+    let data: number[] = [];
     
-    if (days === 90) {
-      // For quarter view (90 days), aggregate data by week to improve performance
-      for (let i = 0; i < days; i += 7) {
+    if (aggregateWeekly) {
+      // For quarter view, aggregate data by week
+      const weekCount = Math.ceil(days / 7);
+      for (let i = 0; i < weekCount; i++) {
         let weeklyRevenue = 0;
+        const weekStart = days - (i * 7);
+        const weekEnd = Math.max(days - ((i + 1) * 7) + 1, 0);
         
-        // Get daily data for each day in this week
-        for (let j = 0; j < 7 && i + j < days; j++) {
-          const date = subDays(now, days - 1 - (i + j));
+        // Sum up revenue for each day in the week
+        for (let j = weekStart - 1; j >= weekEnd - 1; j--) {
+          const date = subDays(now, j);
           const dailyRevenue = await calculateDailyRevenue(connectionId, date);
           weeklyRevenue += dailyRevenue;
         }
         
-        // Add the same weekly revenue value for each day in this week
-        // to maintain the same array length as labels
-        for (let j = 0; j < 7 && i + j < days; j++) {
-          data.push(weeklyRevenue / 7); // Average daily revenue for the week
-        }
+        data.push(weeklyRevenue);
       }
     } else {
-      // For all other views, get daily data
+      // For daily views, get data for each day
       for (let i = days - 1; i >= 0; i--) {
         const date = subDays(now, i);
         const revenue = await calculateDailyRevenue(connectionId, date);

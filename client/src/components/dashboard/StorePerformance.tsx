@@ -55,6 +55,10 @@ export default function StorePerformance({
       const ctx = chartRef.current.getContext('2d');
       
       if (ctx) {
+        // Determine if we're using weekly aggregated data based on label format
+        // Weekly labels contain " - " (e.g. "Mar 01 - Mar 07")
+        const isWeeklyData = data.labels.some(label => label && label.includes(' - '));
+        
         chartInstance.current = new Chart(ctx, {
           type: 'line',
           data: {
@@ -65,16 +69,38 @@ export default function StorePerformance({
               borderColor: index === 0 ? '#3f51b5' : '#f50057',
               backgroundColor: 'transparent',
               borderWidth: 3,
-              tension: 0.4
+              tension: 0.4,
+              pointRadius: isWeeklyData ? 5 : 3, // Larger points for weekly data
+              pointHoverRadius: isWeeklyData ? 7 : 5
             }))
           },
           options: {
             plugins: {
               legend: {
                 position: 'top'
+              },
+              tooltip: {
+                callbacks: {
+                  title: (tooltipItems) => {
+                    // Use the label from the data
+                    return tooltipItems[0].label;
+                  },
+                  label: (context) => {
+                    // Format the value as currency
+                    let value = context.raw as number;
+                    return `Revenue: $${value.toFixed(2)}`;
+                  }
+                }
               }
             },
             scales: {
+              x: {
+                ticks: {
+                  autoSkip: true,
+                  maxRotation: 45,
+                  minRotation: 45
+                }
+              },
               y: {
                 beginAtZero: true,
                 title: {
