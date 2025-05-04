@@ -430,7 +430,10 @@ export default function SettingsPage() {
                         } p-2 hover:border-primary transition-all`}
                         onClick={() => updateProfile({ sidebarBackground: 'none' })}
                       >
-                        <div className="aspect-[4/3] bg-gray-400 rounded-md flex items-center justify-center">
+                        <div 
+                          className="aspect-[4/3] bg-gray-400 rounded-md flex items-center justify-center"
+                          style={{ backgroundImage: 'none' }}
+                        >
                           <span className="text-white font-medium">None</span>
                         </div>
                         {(!user?.sidebarBackground || user?.sidebarBackground === 'none') && (

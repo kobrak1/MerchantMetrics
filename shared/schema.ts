@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
   profilePhoto: text("profile_photo"),
-  sidebarBackground: text("sidebar_background").default('forest-bg.png'),
+  sidebarBackground: text("sidebar_background").default('forest'),
   isAdmin: boolean("is_admin").default(false),
   currentPlanId: integer("current_plan_id").references(() => subscriptionTiers.id),
   allowedStoreCount: integer("allowed_store_count").default(1),
