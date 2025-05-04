@@ -31,6 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import SidebarBackground from "@/components/layout/SidebarBackground";
 
 interface SidebarProps {
   storeConnections: StoreConnection[];
@@ -59,6 +60,8 @@ export default function Sidebar({
   const { toast } = useToast();
   const [storeToRemove, setStoreToRemove] = useState<number | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  console.log("Sidebar user:", user);
 
   const toggleSidebar = () => {
     setIsExpanded(!isExpanded);
@@ -117,12 +120,18 @@ export default function Sidebar({
         )}
       </div>
 
-      <div 
-        className={
-          user?.sidebarBackground === 'none'
-            ? 'py-4 flex flex-col h-full bg-gray-400'
-            : `bg-[url('../../../bg-images/${user?.sidebarBackground || 'forest-bg.png'})] py-4 flex flex-col h-full bg-gray-400`
-        }>
+      <div
+        style={
+          user?.sidebarBackground === "none" 
+            ? undefined
+            : { 
+                backgroundImage: `url('/client/bg-images/${user?.sidebarBackground || "forest-bg.png"}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }
+        }
+        className="py-4 flex flex-col h-full bg-gray-400"
+      >
         <div className={cn("px-4 py-2 mb-4", !isExpanded && "px-2")}>
           {isExpanded && (
             <p className="text-xs uppercase text-neutral-100 font-medium mb-2">
