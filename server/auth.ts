@@ -240,6 +240,117 @@ export function setupAuth(app: Express) {
       }
     });
   });
+  
+  // Update user profile
+  app.patch("/api/user/profile", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+    
+    try {
+      const userId = req.user.id;
+      const { username, email, fullName, currentPassword, newPassword } = req.body;
+      
+      // Create update data object
+      const updateData: Partial<UserModel> = {};
+      
+      // Validate username if provided
+      if (username && username !== req.user.username) {
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(409).json({
+            success: false,
+            field: "username",
+            message: "Username already taken"
+          });
+        }
+        updateData.username = username;
+      }
+      
+      // Validate email if provided
+      if (email && email !== req.user.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(409).json({
+            success: false,
+            field: "email",
+            message: "Email already in use"
+          });
+        }
+        updateData.email = email;
+      }
+      
+      // Update full name if provided
+      if (fullName !== undefined) {
+        updateData.fullName = fullName;
+      }
+      
+      // Handle password change if requested
+      if (newPassword) {
+        if (!currentPassword) {
+          return res.status(400).json({
+            success: false,
+            field: "currentPassword",
+            message: "Current password is required"
+          });
+        }
+        
+        // Verify current password
+        const passwordValid = await comparePasswords(currentPassword, req.user.password);
+        if (!passwordValid) {
+          return res.status(401).json({
+            success: false,
+            field: "currentPassword",
+            message: "Current password is incorrect"
+          });
+        }
+        
+        // Hash and set new password
+        updateData.password = await hashPassword(newPassword);
+      }
+      
+      // Only proceed if there are fields to update
+      if (Object.keys(updateData).length > 0) {
+        const updatedUser = await storage.updateUser(userId, updateData);
+        
+        // Update session user
+        req.login(updatedUser, (err) => {
+          if (err) {
+            console.error("Error updating session user:", err);
+          }
+          
+          return res.json({
+            success: true,
+            user: {
+              id: updatedUser.id,
+              username: updatedUser.username,
+              email: updatedUser.email,
+              fullName: updatedUser.fullName,
+              isAdmin: updatedUser.isAdmin || false
+            }
+          });
+        });
+      } else {
+        // No changes were made
+        return res.json({
+          success: true,
+          user: {
+            id: req.user.id,
+            username: req.user.username,
+            email: req.user.email,
+            fullName: req.user.fullName,
+            isAdmin: req.user.isAdmin || false
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error updating user profile"
+      });
+    }
+  });
 
   // Auth check middleware
   const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {

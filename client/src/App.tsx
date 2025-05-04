@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import OrdersPage from "@/pages/OrdersPage";
 import CustomersPage from "@/pages/CustomersPage";
 import InventoryPage from "@/pages/InventoryPage";
+import SettingsPage from "@/pages/SettingsPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AuthPage from "@/pages/auth-page";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
