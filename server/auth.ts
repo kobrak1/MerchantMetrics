@@ -236,6 +236,7 @@ export function setupAuth(app: Express) {
         username: user.username,
         email: user.email,
         fullName: user.fullName,
+        profilePhoto: user.profilePhoto,
         isAdmin: user.isAdmin || false
       }
     });
@@ -249,7 +250,7 @@ export function setupAuth(app: Express) {
     
     try {
       const userId = req.user.id;
-      const { username, email, fullName, currentPassword, newPassword } = req.body;
+      const { username, email, fullName, currentPassword, newPassword, profilePhoto } = req.body;
       
       // Create update data object
       const updateData: Partial<UserModel> = {};
@@ -283,6 +284,11 @@ export function setupAuth(app: Express) {
       // Update full name if provided
       if (fullName !== undefined) {
         updateData.fullName = fullName;
+      }
+      
+      // Update profile photo if provided
+      if (profilePhoto !== undefined) {
+        updateData.profilePhoto = profilePhoto;
       }
       
       // Handle password change if requested
@@ -326,6 +332,7 @@ export function setupAuth(app: Express) {
               username: updatedUser.username,
               email: updatedUser.email,
               fullName: updatedUser.fullName,
+              profilePhoto: updatedUser.profilePhoto,
               isAdmin: updatedUser.isAdmin || false
             }
           });
@@ -339,6 +346,7 @@ export function setupAuth(app: Express) {
             username: req.user.username,
             email: req.user.email,
             fullName: req.user.fullName,
+            profilePhoto: req.user.profilePhoto,
             isAdmin: req.user.isAdmin || false
           }
         });
