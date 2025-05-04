@@ -39,7 +39,8 @@ export async function calculateRepeatBuyerRate(storeConnectionId: number): Promi
   const orders = await storage.getOrdersByStoreConnection(storeConnectionId);
   
   // Get unique customer IDs
-  const customerIds = [...new Set(orders.map(order => order.customerId))];
+  const customerIdSet = new Set(orders.map(order => order.customerId));
+  const customerIds = Array.from(customerIdSet);
   
   // Count customers with more than one order
   let repeatCustomers = 0;
@@ -93,9 +94,11 @@ export async function getKPIData(storeConnectionId: number, dateFilter: string =
     id: product.id,
     name: product.name,
     sku: product.sku,
-    inventory: product.inventory,
+    // Use default value of 0 if inventory is null
+    inventory: product.inventory ?? 0,
     lowStockThreshold: product.lowStockThreshold,
-    status: product.inventory <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK'
+    // Explicitly cast to the correct union type
+    status: (product.inventory ?? 0) <= 0 ? 'OUT_OF_STOCK' as const : 'LOW_STOCK' as const
   }));
   
   return {
@@ -108,16 +111,40 @@ export async function getKPIData(storeConnectionId: number, dateFilter: string =
 
 export async function getStorePerformance(
   storeConnectionIds: number[],
-  days: number = 7
+  period: string = 'week'
 ): Promise<{ labels: string[], datasets: { label: string, data: number[] }[] }> {
   const now = new Date();
   const labels: string[] = [];
   const datasets: { label: string, data: number[] }[] = [];
   
-  // Generate date labels for the last 'days' days
+  // Determine the period to display
+  let days: number;
+  switch (period) {
+    case 'today':
+      days = 1;
+      break;
+    case 'week':
+      days = 7;
+      break;
+    case 'month':
+      days = 30;
+      break;
+    default:
+      days = 7; // Default to a week
+  }
+  
+  // Generate date labels for the selected period
   for (let i = days - 1; i >= 0; i--) {
     const date = subDays(now, i);
-    labels.push(format(date, 'MMM dd'));
+    // For single day, use hours instead of days
+    if (days === 1) {
+      // For today, show hourly data
+      const hour = new Date(now);
+      hour.setHours(now.getHours() - i, 0, 0, 0);
+      labels.push(format(hour, 'ha')); // Format as 1PM, 2PM, etc.
+    } else {
+      labels.push(format(date, 'MMM dd'));
+    }
   }
   
   // Get data for each store connection

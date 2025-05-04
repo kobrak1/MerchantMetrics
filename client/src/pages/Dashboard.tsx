@@ -33,7 +33,7 @@ export default function Dashboard() {
   
   // Query for KPI data for the active connection
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['/api/analytics/kpi', activeConnectionId],
+    queryKey: ['/api/analytics/kpi', activeConnectionId, dateFilter],
     queryFn: async () => {
       if (!activeConnectionId) return {
         dailyRevenue: 0, 
@@ -43,7 +43,7 @@ export default function Dashboard() {
       };
       
       try {
-        const res = await apiRequest('GET', `/api/analytics/kpi?storeConnectionId=${activeConnectionId}`);
+        const res = await apiRequest('GET', `/api/analytics/kpi?storeConnectionId=${activeConnectionId}&dateFilter=${dateFilter}`);
         const data = await res.json();
         console.log('KPI Data:', data); // Log the data for debugging
         return data; // Return the data directly as it comes from the API
@@ -267,7 +267,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-              <DateFilter onFilterChange={handleDateFilterChange} />
+              <DateFilter onFilterChange={handleDateFilterChange} defaultFilter={dateFilter} />
               
               {/* KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

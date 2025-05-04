@@ -539,12 +539,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/analytics/kpi", async (req: Request, res: Response) => {
     try {
       const storeConnectionId = parseInt(req.query.storeConnectionId as string);
+      const dateFilter = req.query.dateFilter as string || 'week';
       
       if (isNaN(storeConnectionId)) {
         return res.status(400).json({ message: "Valid storeConnectionId is required" });
       }
       
-      const kpiData = await getKPIData(storeConnectionId);
+      const kpiData = await getKPIData(storeConnectionId, dateFilter);
       
       res.status(200).json(kpiData);
     } catch (error) {
@@ -568,9 +569,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid storeConnectionIds are required" });
       }
       
-      const days = req.query.days ? parseInt(req.query.days as string) : 7;
+      // Use the dateFilter parameter instead of days
+      const dateFilter = req.query.dateFilter as string || 'week';
       
-      const performanceData = await getStorePerformance(storeConnectionIds, days);
+      const performanceData = await getStorePerformance(storeConnectionIds, dateFilter);
       
       res.status(200).json(performanceData);
     } catch (error) {
