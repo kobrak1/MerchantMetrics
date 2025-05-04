@@ -41,6 +41,8 @@ export default function InventoryPage() {
   const [activeConnectionId, setActiveConnectionId] = useState<number | null>(
     null
   );
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   // Fetch store connections
   const {
@@ -80,7 +82,42 @@ export default function InventoryPage() {
   });
 
   // Extract products from the response
-  const products = productsResponse?.products || [];
+  const allProducts = productsResponse?.products || [];
+  
+  // Filter products based on search and status filters
+  const filteredProducts = allProducts.filter((product: any) => {
+    // Status filter
+    if (statusFilter !== "all") {
+      if (statusFilter === "in-stock" && 
+          product.inventory !== null && 
+          product.inventory > 0 && 
+          (!product.lowStockThreshold || product.inventory > product.lowStockThreshold)) {
+        // In stock: inventory > 0 and above low stock threshold
+      } else if (statusFilter === "low-stock" && 
+                product.inventory !== null && 
+                product.inventory > 0 && 
+                product.lowStockThreshold && 
+                product.inventory <= product.lowStockThreshold) {
+        // Low stock: inventory > 0 but below or equal to threshold
+      } else if (statusFilter === "out-of-stock" && 
+                product.inventory !== null && 
+                product.inventory <= 0) {
+        // Out of stock: inventory is 0 or negative
+      } else {
+        return false;
+      }
+    }
+    
+    // Search query filter
+    if (searchQuery) {
+      const productName = (product.name || "").toLowerCase();
+      const productSku = (product.sku || "").toLowerCase();
+      return productName.includes(searchQuery.toLowerCase()) || 
+             productSku.includes(searchQuery.toLowerCase());
+    }
+    
+    return true;
+  });
   
   // Fetch low stock products
   const {
@@ -198,7 +235,10 @@ export default function InventoryPage() {
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Inventory</h1>
             <div className="flex gap-2">
-              <Select defaultValue="all">
+              <Select 
+                value={statusFilter} 
+                onValueChange={(value) => setStatusFilter(value)}
+              >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -209,7 +249,21 @@ export default function InventoryPage() {
                   <SelectItem value="out-of-stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
-              <Input className="w-[250px]" placeholder="Search products..." />
+              <Input 
+                className="w-[250px]" 
+                placeholder="Search products..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchQuery("")}
+                  className="px-2"
+                >
+                  Clear
+                </Button>
+              )}
             </div>
           </div>
 
@@ -258,7 +312,7 @@ export default function InventoryPage() {
             <div className="flex h-64 w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : products.length === 0 ? (
+          ) : allProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
               <p className="text-gray-500 mb-4">No products found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
@@ -279,35 +333,65 @@ export default function InventoryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.map((product: any) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.sku || "—"}</TableCell>
-                      <TableCell>{formatCurrency(product.price || 0, product.currency || "USD")}</TableCell>
-                      <TableCell>{getStockStatus(product)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex justify-between text-sm">
-                            <span>{product.inventory || "Not tracked"}</span>
-                            {product.lowStockThreshold && (
-                              <span className="text-gray-500">Threshold: {product.lowStockThreshold}</span>
-                            )}
+                  {filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        {searchQuery ? (
+                          <div>
+                            <p>No products match your search criteria</p>
+                            <Button 
+                              variant="link" 
+                              onClick={() => setSearchQuery("")}
+                              className="mt-1"
+                            >
+                              Clear search
+                            </Button>
                           </div>
-                          {product.inventory !== null && (
-                            <Progress 
-                              value={getStockPercentage(product)} 
-                              className={product.inventory <= 0 ? "bg-red-100" : 
-                                (product.lowStockThreshold && product.inventory <= product.lowStockThreshold) ? 
-                                  "bg-amber-100" : "bg-green-100"}
-                            />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="outline" size="sm">Update Stock</Button>
+                        ) : (
+                          <div>
+                            <p>No products found with status: {statusFilter}</p>
+                            <Button 
+                              variant="link" 
+                              onClick={() => setStatusFilter("all")}
+                              className="mt-1"
+                            >
+                              Show all products
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredProducts.map((product: any) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>{product.sku || "—"}</TableCell>
+                        <TableCell>{formatCurrency(product.price || 0, product.currency || "USD")}</TableCell>
+                        <TableCell>{getStockStatus(product)}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex justify-between text-sm">
+                              <span>{product.inventory || "Not tracked"}</span>
+                              {product.lowStockThreshold && (
+                                <span className="text-gray-500">Threshold: {product.lowStockThreshold}</span>
+                              )}
+                            </div>
+                            {product.inventory !== null && (
+                              <Progress 
+                                value={getStockPercentage(product)} 
+                                className={product.inventory <= 0 ? "bg-red-100" : 
+                                  (product.lowStockThreshold && product.inventory <= product.lowStockThreshold) ? 
+                                    "bg-amber-100" : "bg-green-100"}
+                              />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm">Update Stock</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
