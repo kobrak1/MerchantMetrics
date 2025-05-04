@@ -129,6 +129,9 @@ export async function getStorePerformance(
     case 'month':
       days = 30;
       break;
+    case 'quarter':
+      days = 90;
+      break;
     default:
       days = 7; // Default to a week
   }

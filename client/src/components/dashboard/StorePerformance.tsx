@@ -12,11 +12,38 @@ interface StorePerformanceProps {
     }[];
   };
   isLoading?: boolean;
+  onPeriodChange?: (period: string) => void;
+  defaultPeriod?: string;
 }
 
-export default function StorePerformance({ data, isLoading = false }: StorePerformanceProps) {
+export default function StorePerformance({ 
+  data, 
+  isLoading = false, 
+  onPeriodChange, 
+  defaultPeriod = "7days"
+}: StorePerformanceProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
+  
+  const handlePeriodChange = (value: string) => {
+    if (onPeriodChange) {
+      let periodValue = 'week';
+      
+      switch (value) {
+        case '7days':
+          periodValue = 'week';
+          break;
+        case '30days':
+          periodValue = 'month';
+          break;
+        case 'quarter':
+          periodValue = 'quarter';
+          break;
+      }
+      
+      onPeriodChange(periodValue);
+    }
+  };
   
   useEffect(() => {
     if (chartRef.current && !isLoading && data) {
@@ -74,7 +101,10 @@ export default function StorePerformance({ data, isLoading = false }: StorePerfo
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h4 className="font-medium">Store Performance</h4>
-          <Select defaultValue="7days">
+          <Select 
+            defaultValue={defaultPeriod} 
+            onValueChange={handlePeriodChange}
+          >
             <SelectTrigger className="w-[150px] h-8 text-sm">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
