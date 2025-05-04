@@ -425,14 +425,14 @@ export default function SettingsPage() {
                       {/* None option */}
                       <div 
                         className={`relative cursor-pointer rounded-lg border-2 ${
-                          user?.sidebarBackground === 'none' ? 'border-primary' : 'border-gray-200'
+                          !user?.sidebarBackground || user?.sidebarBackground === 'none' ? 'border-primary' : 'border-gray-200'
                         } p-2 hover:border-primary transition-all`}
                         onClick={() => updateProfile({ sidebarBackground: 'none' })}
                       >
                         <div className="aspect-[4/3] bg-gray-400 rounded-md flex items-center justify-center">
                           <span className="text-white font-medium">None</span>
                         </div>
-                        {user?.sidebarBackground === 'none' && (
+                        {(!user?.sidebarBackground || user?.sidebarBackground === 'none') && (
                           <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
                             ✓
                           </div>
@@ -442,16 +442,15 @@ export default function SettingsPage() {
                       {/* Forest option */}
                       <div 
                         className={`relative cursor-pointer rounded-lg border-2 ${
-                          user?.sidebarBackground === 'forest-bg.png' ? 'border-primary' : 'border-gray-200'
+                          user?.sidebarBackground === 'forest' ? 'border-primary' : 'border-gray-200'
                         } p-2 hover:border-primary transition-all`}
-                        onClick={() => updateProfile({ sidebarBackground: 'forest-bg.png' })}
+                        onClick={() => updateProfile({ sidebarBackground: 'forest' })}
                       >
                         <div 
-                          className="aspect-[4/3] bg-gray-400 rounded-md bg-cover bg-center"
-                          style={{ backgroundImage: "url('../../../bg-images/forest-bg.png')" }}
+                          className="aspect-[4/3] bg-gray-400 rounded-md bg-sidebar-forest"
                         />
                         <p className="text-center text-sm mt-1">Forest</p>
-                        {user?.sidebarBackground === 'forest-bg.png' && (
+                        {user?.sidebarBackground === 'forest' && (
                           <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
                             ✓
                           </div>
@@ -461,16 +460,15 @@ export default function SettingsPage() {
                       {/* City option */}
                       <div 
                         className={`relative cursor-pointer rounded-lg border-2 ${
-                          user?.sidebarBackground === 'city-bg.png' ? 'border-primary' : 'border-gray-200'
+                          user?.sidebarBackground === 'city' ? 'border-primary' : 'border-gray-200'
                         } p-2 hover:border-primary transition-all`}
-                        onClick={() => updateProfile({ sidebarBackground: 'city-bg.png' })}
+                        onClick={() => updateProfile({ sidebarBackground: 'city' })}
                       >
                         <div 
-                          className="aspect-[4/3] bg-gray-400 rounded-md bg-cover bg-center"
-                          style={{ backgroundImage: "url('../../../bg-images/city-bg.png')" }}
+                          className="aspect-[4/3] bg-gray-400 rounded-md bg-sidebar-city"
                         />
                         <p className="text-center text-sm mt-1">City</p>
-                        {user?.sidebarBackground === 'city-bg.png' && (
+                        {user?.sidebarBackground === 'city' && (
                           <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
                             ✓
                           </div>
@@ -480,16 +478,15 @@ export default function SettingsPage() {
                       {/* Ocean option */}
                       <div 
                         className={`relative cursor-pointer rounded-lg border-2 ${
-                          user?.sidebarBackground === 'ocean-bg.png' ? 'border-primary' : 'border-gray-200'
+                          user?.sidebarBackground === 'ocean' ? 'border-primary' : 'border-gray-200'
                         } p-2 hover:border-primary transition-all`}
-                        onClick={() => updateProfile({ sidebarBackground: 'ocean-bg.png' })}
+                        onClick={() => updateProfile({ sidebarBackground: 'ocean' })}
                       >
                         <div 
-                          className="aspect-[4/3] bg-gray-400 rounded-md bg-cover bg-center"
-                          style={{ backgroundImage: "url('../../../bg-images/ocean-bg.png')" }}
+                          className="aspect-[4/3] bg-gray-400 rounded-md bg-sidebar-ocean"
                         />
                         <p className="text-center text-sm mt-1">Ocean</p>
-                        {user?.sidebarBackground === 'ocean-bg.png' && (
+                        {user?.sidebarBackground === 'ocean' && (
                           <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
                             ✓
                           </div>

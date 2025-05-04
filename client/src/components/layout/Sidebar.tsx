@@ -121,16 +121,11 @@ export default function Sidebar({
       </div>
 
       <div
-        style={
-          user?.sidebarBackground === "none" 
-            ? undefined
-            : { 
-                backgroundImage: `url('/client/bg-images/${user?.sidebarBackground || "forest-bg.png"}')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }
-        }
-        className="py-4 flex flex-col h-full bg-gray-400"
+        className={`py-4 flex flex-col h-full bg-gray-400 ${
+          !user?.sidebarBackground || user?.sidebarBackground === "none" 
+            ? ""
+            : `bg-sidebar-${user.sidebarBackground}`
+        }`}
       >
         <div className={cn("px-4 py-2 mb-4", !isExpanded && "px-2")}>
           {isExpanded && (
