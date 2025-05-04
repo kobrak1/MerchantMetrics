@@ -237,6 +237,7 @@ export function setupAuth(app: Express) {
         email: user.email,
         fullName: user.fullName,
         profilePhoto: user.profilePhoto,
+        sidebarBackground: user.sidebarBackground,
         isAdmin: user.isAdmin || false
       }
     });
@@ -250,7 +251,7 @@ export function setupAuth(app: Express) {
     
     try {
       const userId = req.user.id;
-      const { username, email, fullName, currentPassword, newPassword, profilePhoto } = req.body;
+      const { username, email, fullName, currentPassword, newPassword, profilePhoto, sidebarBackground } = req.body;
       
       // Create update data object
       const updateData: Partial<UserModel> = {};
@@ -289,6 +290,11 @@ export function setupAuth(app: Express) {
       // Update profile photo if provided
       if (profilePhoto !== undefined) {
         updateData.profilePhoto = profilePhoto;
+      }
+      
+      // Update sidebar background if provided
+      if (sidebarBackground !== undefined) {
+        updateData.sidebarBackground = sidebarBackground;
       }
       
       // Handle password change if requested
@@ -333,6 +339,7 @@ export function setupAuth(app: Express) {
               email: updatedUser.email,
               fullName: updatedUser.fullName,
               profilePhoto: updatedUser.profilePhoto,
+              sidebarBackground: updatedUser.sidebarBackground,
               isAdmin: updatedUser.isAdmin || false
             }
           });
@@ -347,6 +354,7 @@ export function setupAuth(app: Express) {
             email: req.user.email,
             fullName: req.user.fullName,
             profilePhoto: req.user.profilePhoto,
+            sidebarBackground: req.user.sidebarBackground,
             isAdmin: req.user.isAdmin || false
           }
         });

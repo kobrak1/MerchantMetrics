@@ -117,7 +117,12 @@ export default function Sidebar({
         )}
       </div>
 
-      <div className="bg-[url('../../../bg-images/forest-bg.png')] py-4 flex flex-col h-full bg-gray-400">
+      <div 
+        className={`py-4 flex flex-col h-full bg-gray-400 ${
+          user?.sidebarBackground === 'none' 
+            ? '' 
+            : `bg-[url('../../../bg-images/${user?.sidebarBackground || 'forest-bg.png'}')]`
+        }`}>
         <div className={cn("px-4 py-2 mb-4", !isExpanded && "px-2")}>
           {isExpanded && (
             <p className="text-xs uppercase text-neutral-100 font-medium mb-2">

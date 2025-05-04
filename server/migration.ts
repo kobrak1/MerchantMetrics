@@ -78,6 +78,11 @@ async function ensureUserTable() {
       await db.execute(sql`ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP`);
     }
     
+    if (!columns.includes('sidebar_background')) {
+      await db.execute(sql`ALTER TABLE users ADD COLUMN sidebar_background TEXT DEFAULT 'forest-bg.png'`);
+      console.log('Added sidebar_background column to users table');
+    }
+    
     if (!columns.includes('session_count')) {
       await db.execute(sql`ALTER TABLE users ADD COLUMN session_count INTEGER`);
     }

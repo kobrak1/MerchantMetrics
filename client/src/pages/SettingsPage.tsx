@@ -274,7 +274,7 @@ export default function SettingsPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="account" className="mt-6">
+              <TabsContent value="account" className="mt-6 space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Profile Information</CardTitle>
@@ -410,6 +410,92 @@ export default function SettingsPage() {
                         </Button>
                       </form>
                     </Form>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sidebar Background</CardTitle>
+                    <CardDescription>
+                      Customize the background image of your sidebar
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {/* None option */}
+                      <div 
+                        className={`relative cursor-pointer rounded-lg border-2 ${
+                          user?.sidebarBackground === 'none' ? 'border-primary' : 'border-gray-200'
+                        } p-2 hover:border-primary transition-all`}
+                        onClick={() => updateProfile({ sidebarBackground: 'none' })}
+                      >
+                        <div className="aspect-[4/3] bg-gray-400 rounded-md flex items-center justify-center">
+                          <span className="text-white font-medium">None</span>
+                        </div>
+                        {user?.sidebarBackground === 'none' && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Forest option */}
+                      <div 
+                        className={`relative cursor-pointer rounded-lg border-2 ${
+                          user?.sidebarBackground === 'forest-bg.png' ? 'border-primary' : 'border-gray-200'
+                        } p-2 hover:border-primary transition-all`}
+                        onClick={() => updateProfile({ sidebarBackground: 'forest-bg.png' })}
+                      >
+                        <div 
+                          className="aspect-[4/3] bg-gray-400 rounded-md bg-cover bg-center"
+                          style={{ backgroundImage: "url('../../../bg-images/forest-bg.png')" }}
+                        />
+                        <p className="text-center text-sm mt-1">Forest</p>
+                        {user?.sidebarBackground === 'forest-bg.png' && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* City option */}
+                      <div 
+                        className={`relative cursor-pointer rounded-lg border-2 ${
+                          user?.sidebarBackground === 'city-bg.png' ? 'border-primary' : 'border-gray-200'
+                        } p-2 hover:border-primary transition-all`}
+                        onClick={() => updateProfile({ sidebarBackground: 'city-bg.png' })}
+                      >
+                        <div 
+                          className="aspect-[4/3] bg-gray-400 rounded-md bg-cover bg-center"
+                          style={{ backgroundImage: "url('../../../bg-images/city-bg.png')" }}
+                        />
+                        <p className="text-center text-sm mt-1">City</p>
+                        {user?.sidebarBackground === 'city-bg.png' && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Ocean option */}
+                      <div 
+                        className={`relative cursor-pointer rounded-lg border-2 ${
+                          user?.sidebarBackground === 'ocean-bg.png' ? 'border-primary' : 'border-gray-200'
+                        } p-2 hover:border-primary transition-all`}
+                        onClick={() => updateProfile({ sidebarBackground: 'ocean-bg.png' })}
+                      >
+                        <div 
+                          className="aspect-[4/3] bg-gray-400 rounded-md bg-cover bg-center"
+                          style={{ backgroundImage: "url('../../../bg-images/ocean-bg.png')" }}
+                        />
+                        <p className="text-center text-sm mt-1">Ocean</p>
+                        {user?.sidebarBackground === 'ocean-bg.png' && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
