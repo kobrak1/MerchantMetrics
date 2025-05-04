@@ -1,13 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface DateFilterProps {
   onFilterChange: (filter: string) => void;
+  defaultFilter?: string;
 }
 
-export default function DateFilter({ onFilterChange }: DateFilterProps) {
-  const [activeFilter, setActiveFilter] = useState("week");
+export default function DateFilter({ onFilterChange, defaultFilter = "week" }: DateFilterProps) {
+  const [activeFilter, setActiveFilter] = useState(defaultFilter);
+  
+  // Apply default filter on initial render
+  useEffect(() => {
+    onFilterChange(activeFilter);
+  }, []);
   
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);

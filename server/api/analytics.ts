@@ -59,12 +59,33 @@ export async function getInventoryAlerts(storeConnectionId: number): Promise<Pro
   return storage.getLowStockProducts(storeConnectionId);
 }
 
-export async function getKPIData(storeConnectionId: number): Promise<KPIData> {
+export async function getKPIData(storeConnectionId: number, dateFilter: string = 'week'): Promise<KPIData> {
   const now = new Date();
-  const sevenDaysAgo = subDays(now, 7);
+  let startDate: Date;
   
+  // Determine the start date based on the filter
+  switch (dateFilter) {
+    case 'today':
+      startDate = new Date(now);
+      startDate.setHours(0, 0, 0, 0);
+      break;
+    case 'week':
+      startDate = subDays(now, 7);
+      break;
+    case 'month':
+      startDate = subDays(now, 30);
+      break;
+    default:
+      startDate = subDays(now, 7); // Default to week
+  }
+  
+  // Calculate daily revenue for the current day regardless of filter
   const dailyRevenue = await calculateDailyRevenue(storeConnectionId);
-  const totalOrders = await calculateTotalOrders(storeConnectionId, sevenDaysAgo);
+  
+  // Calculate total orders based on the date filter
+  const totalOrders = await calculateTotalOrders(storeConnectionId, startDate);
+  
+  // These values remain the same regardless of filter
   const repeatBuyerRate = await calculateRepeatBuyerRate(storeConnectionId);
   const lowStockProducts = await getInventoryAlerts(storeConnectionId);
   
