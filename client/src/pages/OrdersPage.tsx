@@ -172,25 +172,34 @@ export default function OrdersPage() {
     setSortDirection(sortDirection === "desc" ? "asc" : "desc");
   };
 
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar
-        storeConnections={storeConnections}
-        activeConnectionId={activeConnectionId}
-        onConnectionChange={setActiveConnectionId}
-        subscriptionInfo={subscriptionInfo}
-        onConnectStoreClick={() => setIsConnectModalOpen(true)}
-      />
+    <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
+      {/* Sidebar */}
+      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
+        <Sidebar
+          storeConnections={storeConnections}
+          activeConnectionId={activeConnectionId}
+          onConnectionChange={setActiveConnectionId}
+          subscriptionInfo={subscriptionInfo}
+          onConnectStoreClick={() => setIsConnectModalOpen(true)}
+        />
+      </div>
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-          user={{ name: user?.fullName || user?.username || "", initials: getInitials(user?.fullName || user?.username || "") }}
+          title="Orders" 
+          userName={user?.fullName || user?.username || "User"} 
+          userInitials={getInitials(user?.fullName || user?.username || "User")}
+          onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Orders</h1>
-            <div className="flex gap-2">
+        <main className="flex-1 overflow-y-auto p-4">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold dark:text-white">Orders</h1>
+            <div className="flex flex-wrap gap-2">
               <Select 
                 value={statusFilter} 
                 onValueChange={(value) => setStatusFilter(value)}
@@ -230,26 +239,31 @@ export default function OrdersPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : allOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
-              <p className="text-gray-500 mb-4">No orders found for this store</p>
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No orders found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Order #</TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:text-primary flex items-center gap-1"
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                       onClick={toggleSortDirection}
                     >
-                      Date {sortDirection === "desc" ? 
-                        <ArrowDown className="h-4 w-4" /> : 
-                        <ArrowUp className="h-4 w-4" />
-                      }
+                      <div className="flex items-center gap-1">
+                        <span>Date</span>
+                        <span>
+                          {sortDirection === "desc" ? 
+                            <ArrowDown className="h-4 w-4" /> : 
+                            <ArrowUp className="h-4 w-4" />
+                          }
+                        </span>
+                      </div>
                     </TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Status</TableHead>

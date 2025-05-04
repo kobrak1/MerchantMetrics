@@ -239,25 +239,34 @@ export default function InventoryPage() {
     }
   };
 
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar
-        storeConnections={storeConnections}
-        activeConnectionId={activeConnectionId}
-        onConnectionChange={setActiveConnectionId}
-        subscriptionInfo={subscriptionInfo}
-        onConnectStoreClick={() => setIsConnectModalOpen(true)}
-      />
+    <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
+      {/* Sidebar */}
+      <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
+        <Sidebar
+          storeConnections={storeConnections}
+          activeConnectionId={activeConnectionId}
+          onConnectionChange={setActiveConnectionId}
+          subscriptionInfo={subscriptionInfo}
+          onConnectStoreClick={() => setIsConnectModalOpen(true)}
+        />
+      </div>
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-          user={{ name: user?.fullName || user?.username || "", initials: getInitials(user?.fullName || user?.username || "") }}
+          title="Inventory" 
+          userName={user?.fullName || user?.username || "User"} 
+          userInitials={getInitials(user?.fullName || user?.username || "User")}
+          onMobileMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Inventory</h1>
-            <div className="flex gap-2">
+        <main className="flex-1 overflow-y-auto p-4">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold dark:text-white">Inventory</h1>
+            <div className="flex flex-wrap gap-2">
               <Select 
                 value={statusFilter} 
                 onValueChange={(value) => setStatusFilter(value)}
@@ -292,27 +301,27 @@ export default function InventoryPage() {
 
           {/* Low Stock Alerts Card */}
           {!isLoadingLowStock && lowStockProducts.length > 0 && (
-            <Card className="mb-6 border-amber-200">
+            <Card className="mb-6 border-amber-200 dark:border-amber-700 dark:bg-gray-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-amber-500" />
-                  <span>Low Stock Alerts</span>
+                  <span className="dark:text-white">Low Stock Alerts</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {lowStockProducts.slice(0, 3).map((product: any) => (
-                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                      <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
+                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-700">
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-300">
                         {product.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{product.name}</p>
+                        <p className="font-medium truncate dark:text-white">{product.name}</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             {product.inventory} in stock
                           </span>
-                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
+                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-800">
                             Low Stock
                           </Badge>
                         </div>
@@ -320,7 +329,7 @@ export default function InventoryPage() {
                     </div>
                   ))}
                   {lowStockProducts.length > 3 && (
-                    <div className="flex items-center justify-center p-3 rounded-lg border border-dashed">
+                    <div className="flex items-center justify-center p-3 rounded-lg border border-dashed dark:border-gray-700">
                       <Button variant="ghost">
                         View {lowStockProducts.length - 3} more items
                       </Button>
@@ -336,21 +345,21 @@ export default function InventoryPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : allProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
-              <p className="text-gray-500 mb-4">No products found for this store</p>
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No products found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                       onClick={handlePriceSortClick}
                     >
                       <div className="flex items-center">
@@ -411,15 +420,15 @@ export default function InventoryPage() {
                             <div className="flex justify-between text-sm">
                               <span>{product.inventory || "Not tracked"}</span>
                               {product.lowStockThreshold && (
-                                <span className="text-gray-500">Threshold: {product.lowStockThreshold}</span>
+                                <span className="text-gray-500 dark:text-gray-400">Threshold: {product.lowStockThreshold}</span>
                               )}
                             </div>
                             {product.inventory !== null && (
                               <Progress 
                                 value={getStockPercentage(product)} 
-                                className={product.inventory <= 0 ? "bg-red-100" : 
+                                className={product.inventory <= 0 ? "bg-red-100 dark:bg-red-900" : 
                                   (product.lowStockThreshold && product.inventory <= product.lowStockThreshold) ? 
-                                    "bg-amber-100" : "bg-green-100"}
+                                    "bg-amber-100 dark:bg-amber-900" : "bg-green-100 dark:bg-green-900"}
                               />
                             )}
                           </div>
