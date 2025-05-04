@@ -569,10 +569,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Valid storeConnectionIds are required" });
       }
       
-      // Use the dateFilter parameter instead of days
-      const dateFilter = req.query.dateFilter as string || 'week';
+      // Use either the period or dateFilter parameter
+      const period = (req.query.period as string) || (req.query.dateFilter as string) || 'week';
       
-      const performanceData = await getStorePerformance(storeConnectionIds, dateFilter);
+      const performanceData = await getStorePerformance(storeConnectionIds, period);
       
       res.status(200).json(performanceData);
     } catch (error) {

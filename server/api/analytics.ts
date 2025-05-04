@@ -139,14 +139,31 @@ export async function getStorePerformance(
   // Generate date labels for the selected period
   for (let i = days - 1; i >= 0; i--) {
     const date = subDays(now, i);
-    // For single day, use hours instead of days
+    
+    // Format date labels differently based on the period
     if (days === 1) {
       // For today, show hourly data
       const hour = new Date(now);
       hour.setHours(now.getHours() - i, 0, 0, 0);
       labels.push(format(hour, 'ha')); // Format as 1PM, 2PM, etc.
-    } else {
+    } else if (days <= 14) {
+      // For short periods (up to 2 weeks), show full date
       labels.push(format(date, 'MMM dd'));
+    } else if (days <= 31) {
+      // For month view, show every 5 days or only specific days
+      // Skip some labels to prevent overcrowding
+      if (i % 5 === 0 || i === 0 || i === days - 1) {
+        labels.push(format(date, 'MMM dd'));
+      } else {
+        labels.push(''); // Empty label for days we want to skip
+      }
+    } else {
+      // For quarter view, show every 15 days or only month starts
+      if (i % 15 === 0 || i === 0 || i === days - 1 || date.getDate() === 1) {
+        labels.push(format(date, 'MMM dd'));
+      } else {
+        labels.push(''); // Empty label
+      }
     }
   }
   
@@ -157,10 +174,31 @@ export async function getStorePerformance(
     
     const data: number[] = [];
     
-    for (let i = days - 1; i >= 0; i--) {
-      const date = subDays(now, i);
-      const revenue = await calculateDailyRevenue(connectionId, date);
-      data.push(revenue);
+    if (days === 90) {
+      // For quarter view (90 days), aggregate data by week to improve performance
+      for (let i = 0; i < days; i += 7) {
+        let weeklyRevenue = 0;
+        
+        // Get daily data for each day in this week
+        for (let j = 0; j < 7 && i + j < days; j++) {
+          const date = subDays(now, days - 1 - (i + j));
+          const dailyRevenue = await calculateDailyRevenue(connectionId, date);
+          weeklyRevenue += dailyRevenue;
+        }
+        
+        // Add the same weekly revenue value for each day in this week
+        // to maintain the same array length as labels
+        for (let j = 0; j < 7 && i + j < days; j++) {
+          data.push(weeklyRevenue / 7); // Average daily revenue for the week
+        }
+      }
+    } else {
+      // For all other views, get daily data
+      for (let i = days - 1; i >= 0; i--) {
+        const date = subDays(now, i);
+        const revenue = await calculateDailyRevenue(connectionId, date);
+        data.push(revenue);
+      }
     }
     
     datasets.push({
