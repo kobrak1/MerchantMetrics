@@ -94,7 +94,7 @@ export default function Sidebar({
     >
       <div className="p-4 h-[61px] flex items-center justify-between border-b-[2px] border-primary bg-gray-300 shadow-lg shadow-primary/50">
         <h1 className={cn("text-xl font-medium", !isExpanded && "hidden")}>
-          ShopMetrics
+          DataPilot
         </h1>
         {isExpanded ? (
           <Button
@@ -117,17 +117,21 @@ export default function Sidebar({
         )}
       </div>
 
-      <div className="py-4 flex flex-col h-full bg-gray-400">
+      <div className="bg-[url('../../../bg-images/forest-bg.png')] py-4 flex flex-col h-full bg-gray-400">
         <div className={cn("px-4 py-2 mb-4", !isExpanded && "px-2")}>
           {isExpanded && (
-            <p className="text-xs uppercase text-neutral-300 font-medium mb-2">
+            <p className="text-xs uppercase text-neutral-100 font-medium mb-2">
               Connected Stores
             </p>
           )}
-          
-          <div className={cn(
-            storeConnections.length > 4 && isExpanded ? "max-h-64 overflow-y-auto pr-1 custom-scrollbar" : ""
-          )}>
+
+          <div
+            className={cn(
+              storeConnections.length > 4 && isExpanded
+                ? "max-h-64 overflow-y-auto pr-1 custom-scrollbar"
+                : "",
+            )}
+          >
             {storeConnections.map((connection) => (
               <div
                 key={connection.id}
@@ -188,15 +192,13 @@ export default function Sidebar({
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to remove{" "}
-                          <strong>{connection.name}</strong>? This will disconnect
-                          your store and remove all associated data. This action
-                          cannot be undone.
+                          <strong>{connection.name}</strong>? This will
+                          disconnect your store and remove all associated data.
+                          This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>
-                          Cancel
-                        </AlertDialogCancel>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           className="bg-red-500 text-white hover:bg-red-600"
                           onClick={handleRemoveStore}
@@ -214,7 +216,7 @@ export default function Sidebar({
           <Button
             variant="ghost"
             className={cn(
-              "mt-3 text-xs flex items-center text-secondary-light p-1",
+              "mt-3 text-sm flex items-center text-secondary-light p-1 hover:bg-white/50 hover:backdrop-blur-sm",
               !isExpanded && "justify-center w-full p-1",
             )}
             onClick={onConnectStoreClick}
@@ -251,13 +253,15 @@ export default function Sidebar({
               label: "Settings",
               icon: <Settings className="h-5 w-5 mr-3" />,
             },
-            ...(user?.isAdmin ? [
-              {
-                path: "/admin",
-                label: "Admin Dashboard",
-                icon: <ShieldAlert className="h-5 w-5 mr-3" />,
-              }
-            ] : []),
+            ...(user?.isAdmin
+              ? [
+                  {
+                    path: "/admin",
+                    label: "Admin Dashboard",
+                    icon: <ShieldAlert className="h-5 w-5 mr-3" />,
+                  },
+                ]
+              : []),
           ].map(({ path, label, icon }) => {
             const [location] = useLocation();
             const isActive = location === path;
@@ -266,11 +270,11 @@ export default function Sidebar({
               <li
                 key={path}
                 className={cn(
-                  "px-4 py-2",
+                  "px-4 py-2 hover:bg-white/30 hover:backdrop-blur-sm",
                   isActive && "bg-primary bg-opacity-30",
                 )}
               >
-                <Link href={path} className="flex items-center">
+                <Link href={path} className="flex items-center text-white">
                   {icon}
                   {isExpanded && <span>{label}</span>}
                 </Link>
