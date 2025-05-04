@@ -45,6 +45,7 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Fetch store connections
   const {
@@ -238,8 +239,6 @@ export default function InventoryPage() {
       setSortDirection("desc");
     }
   };
-
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
