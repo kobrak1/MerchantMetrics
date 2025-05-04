@@ -132,7 +132,7 @@ export default function CustomersPage() {
   }
   
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-neutral-100">
       {/* Sidebar */}
       <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
         <Sidebar
@@ -155,7 +155,7 @@ export default function CustomersPage() {
 
         <main className="flex-1 overflow-y-auto p-4">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold dark:text-white">Customers</h1>
+            <h1 className="text-2xl font-bold">Customers</h1>
             <div className="flex flex-wrap gap-2">
               <Input 
                 className="w-[250px]" 
@@ -187,21 +187,21 @@ export default function CustomersPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : allCustomers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">No customers found for this store</p>
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
+              <p className="text-gray-500 mb-4">No customers found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : filteredCustomers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">No customers match your search</p>
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
+              <p className="text-gray-500 mb-4">No customers match your search</p>
               <Button onClick={() => setSearchQuery("")} variant="outline">
                 Clear Search
               </Button>
             </div>
           ) : viewMode === "table" ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -239,7 +239,7 @@ export default function CustomersPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCustomers.map((customer: any) => (
-                <Card key={customer.id} className="overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+                <Card key={customer.id} className="overflow-hidden">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
@@ -247,8 +247,8 @@ export default function CustomersPage() {
                           <AvatarFallback>{getInitials(customer.name || "")}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <CardTitle className="dark:text-white">{customer.name || customer.id}</CardTitle>
-                          <CardDescription className="dark:text-gray-400">{customer.email || "No email available"}</CardDescription>
+                          <CardTitle>{customer.name || customer.id}</CardTitle>
+                          <CardDescription>{customer.email || "No email available"}</CardDescription>
                         </div>
                       </div>
                       <DropdownMenu>
@@ -269,32 +269,32 @@ export default function CustomersPage() {
                     <div className="flex flex-col gap-2 text-sm">
                       {customer.phone && (
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          <span className="dark:text-gray-300">{customer.phone}</span>
+                          <Phone className="h-4 w-4 text-gray-500" />
+                          <span>{customer.phone}</span>
                         </div>
                       )}
                       {customer.location && (
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          <span className="dark:text-gray-300">{customer.location}</span>
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <span>{customer.location}</span>
                         </div>
                       )}
                       {customer.email && (
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          <span className="dark:text-gray-300">{customer.email}</span>
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <span>{customer.email}</span>
                         </div>
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between bg-gray-50 dark:bg-gray-700 p-4">
+                  <CardFooter className="flex justify-between bg-gray-50 p-4">
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Orders</span>
-                      <p className="font-medium dark:text-white">{customer.orderCount || 0}</p>
+                      <span className="text-sm text-gray-500">Orders</span>
+                      <p className="font-medium">{customer.orderCount || 0}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Total Spent</span>
-                      <p className="font-medium dark:text-white">{formatCurrency(customer.totalSpent || 0, customer.currency || "USD")}</p>
+                      <span className="text-sm text-gray-500">Total Spent</span>
+                      <p className="font-medium">{formatCurrency(customer.totalSpent || 0, customer.currency || "USD")}</p>
                     </div>
                   </CardFooter>
                 </Card>
