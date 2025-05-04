@@ -9,6 +9,7 @@ interface ProfileData {
   currentPassword?: string;
   newPassword?: string;
   profilePhoto?: string;
+  sidebarBackground?: string;
 }
 
 export function useProfile() {
