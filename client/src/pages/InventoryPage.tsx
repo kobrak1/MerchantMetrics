@@ -310,17 +310,17 @@ export default function InventoryPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {lowStockProducts.slice(0, 3).map((product: any) => (
-                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg border dark:border-gray-700">
-                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-300">
+                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                      <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
                         {product.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate dark:text-white">{product.name}</p>
+                        <p className="font-medium truncate">{product.name}</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                          <span className="text-sm text-gray-500">
                             {product.inventory} in stock
                           </span>
-                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-800">
+                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
                             Low Stock
                           </Badge>
                         </div>
@@ -328,7 +328,7 @@ export default function InventoryPage() {
                     </div>
                   ))}
                   {lowStockProducts.length > 3 && (
-                    <div className="flex items-center justify-center p-3 rounded-lg border border-dashed dark:border-gray-700">
+                    <div className="flex items-center justify-center p-3 rounded-lg border border-dashed">
                       <Button variant="ghost">
                         View {lowStockProducts.length - 3} more items
                       </Button>
@@ -344,21 +344,21 @@ export default function InventoryPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : allProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">No products found for this store</p>
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
+              <p className="text-gray-500 mb-4">No products found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="cursor-pointer hover:bg-gray-50"
                       onClick={handlePriceSortClick}
                     >
                       <div className="flex items-center">
@@ -419,15 +419,15 @@ export default function InventoryPage() {
                             <div className="flex justify-between text-sm">
                               <span>{product.inventory || "Not tracked"}</span>
                               {product.lowStockThreshold && (
-                                <span className="text-gray-500 dark:text-gray-400">Threshold: {product.lowStockThreshold}</span>
+                                <span className="text-gray-500">Threshold: {product.lowStockThreshold}</span>
                               )}
                             </div>
                             {product.inventory !== null && (
                               <Progress 
                                 value={getStockPercentage(product)} 
-                                className={product.inventory <= 0 ? "bg-red-100 dark:bg-red-900" : 
+                                className={product.inventory <= 0 ? "bg-red-100" : 
                                   (product.lowStockThreshold && product.inventory <= product.lowStockThreshold) ? 
-                                    "bg-amber-100 dark:bg-amber-900" : "bg-green-100 dark:bg-green-900"}
+                                    "bg-amber-100" : "bg-green-100"}
                               />
                             )}
                           </div>
