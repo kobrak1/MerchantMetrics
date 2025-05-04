@@ -3,6 +3,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { useAuth } from "@/hooks/use-auth";
 import { useStoreConnections } from "@/hooks/use-store-connection";
 import { useQuery } from "@tanstack/react-query";
+import { backgroundImages } from "@/styles/sidebar";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -439,7 +440,7 @@ export default function SettingsPage() {
                         )}
                       </div>
                       
-                      {/* Forest option */}
+                      {/* Import background images */}
                       <div 
                         className={`relative cursor-pointer rounded-lg border-2 ${
                           user?.sidebarBackground === 'forest' ? 'border-primary' : 'border-gray-200'
@@ -447,7 +448,12 @@ export default function SettingsPage() {
                         onClick={() => updateProfile({ sidebarBackground: 'forest' })}
                       >
                         <div 
-                          className="aspect-[4/3] bg-gray-400 rounded-md bg-sidebar-forest"
+                          className="aspect-[4/3] bg-gray-400 rounded-md"
+                          style={{ 
+                            backgroundImage: backgroundImages.forest,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                          }}
                         />
                         <p className="text-center text-sm mt-1">Forest</p>
                         {user?.sidebarBackground === 'forest' && (
@@ -465,7 +471,12 @@ export default function SettingsPage() {
                         onClick={() => updateProfile({ sidebarBackground: 'city' })}
                       >
                         <div 
-                          className="aspect-[4/3] bg-gray-400 rounded-md bg-sidebar-city"
+                          className="aspect-[4/3] bg-gray-400 rounded-md"
+                          style={{ 
+                            backgroundImage: backgroundImages.city,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                          }}
                         />
                         <p className="text-center text-sm mt-1">City</p>
                         {user?.sidebarBackground === 'city' && (
@@ -483,7 +494,12 @@ export default function SettingsPage() {
                         onClick={() => updateProfile({ sidebarBackground: 'ocean' })}
                       >
                         <div 
-                          className="aspect-[4/3] bg-gray-400 rounded-md bg-sidebar-ocean"
+                          className="aspect-[4/3] bg-gray-400 rounded-md"
+                          style={{ 
+                            backgroundImage: backgroundImages.ocean,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                          }}
                         />
                         <p className="text-center text-sm mt-1">Ocean</p>
                         {user?.sidebarBackground === 'ocean' && (

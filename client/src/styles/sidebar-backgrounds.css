@@ -1,17 +1,17 @@
 .bg-sidebar-forest {
-  background-image: url('/client/bg-images/forest-bg.png');
+  background-image: url('../../bg-images/forest-bg.png');
   background-size: cover;
   background-position: center;
 }
 
 .bg-sidebar-city {
-  background-image: url('/client/bg-images/city-bg.png');
+  background-image: url('../../bg-images/city-bg.png');
   background-size: cover;
   background-position: center;
 }
 
 .bg-sidebar-ocean {
-  background-image: url('/client/bg-images/ocean-bg.png');
+  background-image: url('../../bg-images/ocean-bg.png');
   background-size: cover;
   background-position: center;
 }

@@ -18,6 +18,7 @@ import {
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useStoreConnections } from "@/hooks/use-store-connection";
 import { useAuth } from "@/hooks/use-auth";
+import { backgroundImages } from "@/styles/sidebar";
 import { Link, useLocation } from "wouter";
 import {
   AlertDialog,
@@ -121,11 +122,14 @@ export default function Sidebar({
       </div>
 
       <div
-        className={`py-4 flex flex-col h-full bg-gray-400 ${
-          !user?.sidebarBackground || user?.sidebarBackground === "none" 
-            ? ""
-            : `bg-sidebar-${user.sidebarBackground}`
-        }`}
+        className="py-4 flex flex-col h-full bg-gray-400"
+        style={{
+          backgroundImage: user?.sidebarBackground && user.sidebarBackground !== 'none' 
+            ? backgroundImages[user.sidebarBackground as keyof typeof backgroundImages] 
+            : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
       >
         <div className={cn("px-4 py-2 mb-4", !isExpanded && "px-2")}>
           {isExpanded && (
