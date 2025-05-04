@@ -7,7 +7,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import ConnectStoreModal from "@/components/modals/ConnectStoreModal";
 import { getInitials } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -43,6 +43,8 @@ export default function InventoryPage() {
   );
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
   // Fetch store connections
   const {
@@ -85,7 +87,7 @@ export default function InventoryPage() {
   const allProducts = productsResponse?.products || [];
   
   // Filter products based on search and status filters
-  const filteredProducts = allProducts.filter((product: any) => {
+  let filteredProducts = allProducts.filter((product: any) => {
     // Status filter
     if (statusFilter !== "all") {
       if (statusFilter === "in-stock" && 
@@ -118,6 +120,15 @@ export default function InventoryPage() {
     
     return true;
   });
+  
+  // Sort products if required
+  if (sortBy === "price") {
+    filteredProducts = [...filteredProducts].sort((a: any, b: any) => {
+      const priceA = a.price || 0;
+      const priceB = b.price || 0;
+      return sortDirection === "asc" ? priceA - priceB : priceB - priceA;
+    });
+  }
   
   // Fetch low stock products
   const {
@@ -215,6 +226,18 @@ export default function InventoryPage() {
       </div>
     );
   }
+  
+  // Handle price column sorting
+  const handlePriceSortClick = () => {
+    if (sortBy === "price") {
+      // If already sorting by price, toggle direction
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Start sorting by price in descending order
+      setSortBy("price");
+      setSortDirection("desc");
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -326,7 +349,22 @@ export default function InventoryPage() {
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
-                    <TableHead>Price</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={handlePriceSortClick}
+                    >
+                      <div className="flex items-center">
+                        <span>Price</span>
+                        {sortBy === "price" && (
+                          <span className="ml-1">
+                            {sortDirection === "asc" ? 
+                              <ArrowUp className="h-4 w-4" /> : 
+                              <ArrowDown className="h-4 w-4" />
+                            }
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
                     <TableHead>Stock Status</TableHead>
                     <TableHead>Inventory</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
