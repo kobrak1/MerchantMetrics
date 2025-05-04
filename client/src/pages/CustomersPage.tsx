@@ -40,11 +40,10 @@ export default function CustomersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
-  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(
-    null
-  );
+  const [activeConnectionId, setActiveConnectionId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Fetch store connections
   const {
@@ -131,8 +130,6 @@ export default function CustomersPage() {
       </div>
     );
   }
-
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">

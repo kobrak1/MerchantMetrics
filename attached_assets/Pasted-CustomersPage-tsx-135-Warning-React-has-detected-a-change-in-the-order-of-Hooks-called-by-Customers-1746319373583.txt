@@ -1,0 +1,86 @@
+CustomersPage.tsx:135 Warning: React has detected a change in the order of Hooks called by CustomersPage. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useContext                 useContext
+2. useState                   useState
+3. useEffect                  useEffect
+4. useState                   useState
+5. useState                   useState
+6. useState                   useState
+7. useState                   useState
+8. useState                   useState
+9. useState                   useState
+10. useState                  useState
+11. useContext                useContext
+12. useState                  useState
+13. useEffect                 useEffect
+14. useContext                useContext
+15. useContext                useContext
+16. useContext                useContext
+17. useEffect                 useEffect
+18. useState                  useState
+19. useCallback               useCallback
+20. useSyncExternalStore      useSyncExternalStore
+21. useEffect                 useEffect
+22. useEffect                 useEffect
+23. useEffect                 useEffect
+24. useEffect                 useEffect
+25. useContext                useContext
+26. useContext                useContext
+27. useContext                useContext
+28. useEffect                 useEffect
+29. useState                  useState
+30. useCallback               useCallback
+31. useSyncExternalStore      useSyncExternalStore
+32. useEffect                 useEffect
+33. useContext                useContext
+34. useContext                useContext
+35. useContext                useContext
+36. useEffect                 useEffect
+37. useState                  useState
+38. useCallback               useCallback
+39. useSyncExternalStore      useSyncExternalStore
+40. useEffect                 useEffect
+41. undefined                 useState
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at CustomersPage (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/pages/CustomersPage.tsx?t=1746319187475:57:20)
+    at Route (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:323:16)
+    at ProtectedRoute (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/App.tsx?t=1746319187475&v=iMEd3Myc3-yfYFOniru84:33:3)
+    at Switch (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:379:17)
+    at Router
+    at Provider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a4bfbf6:38:15)
+    at TooltipProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4a4bfbf6:62:5)
+    at AuthProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4a4bfbf6:2805:3)
+    at App
+    at V (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:44:25)
+    at J (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:42:18)
+
+CustomersPage.tsx:67 CustomersPage state - activeConnectionId: null Hook connection ID: 18
+chunk-RPCDYKBN.js?v=4a4bfbf6:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at CustomersPage (CustomersPage.tsx:135:57)
+CustomersPage.tsx:67 CustomersPage state - activeConnectionId: null Hook connection ID: 18
+CustomersPage.tsx:67 CustomersPage state - activeConnectionId: null Hook connection ID: 18
+chunk-RPCDYKBN.js?v=4a4bfbf6:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at CustomersPage (CustomersPage.tsx:135:57)
+chunk-RPCDYKBN.js?v=4a4bfbf6:14032 The above error occurred in the <CustomersPage> component:
+
+    at CustomersPage (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/pages/CustomersPage.tsx?t=1746319187475:57:20)
+    at Route (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:323:16)
+    at ProtectedRoute (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/App.tsx?t=1746319187475&v=iMEd3Myc3-yfYFOniru84:33:3)
+    at Switch (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a4bfbf6:379:17)
+    at Router
+    at Provider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a4bfbf6:38:15)
+    at TooltipProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4a4bfbf6:62:5)
+    at AuthProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4a4bfbf6:2805:3)
+    at App
+    at V (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:44:25)
+    at J (https://d36de3ee-f377-4994-ba58-5e4a82e4f6b8-00-3mdakjhkls6rt.picard.replit…e/runner/workspace/node_modules/.vite/deps/next-themes.js?v=4a4bfbf6:42:18)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-RPCDYKBN.js?v=4a4bfbf6:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at CustomersPage (CustomersPage.tsx:135:57)
