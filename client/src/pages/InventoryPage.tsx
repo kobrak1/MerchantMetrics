@@ -241,7 +241,7 @@ export default function InventoryPage() {
   };
   
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
         <Sidebar
@@ -264,7 +264,7 @@ export default function InventoryPage() {
 
         <main className="flex-1 overflow-y-auto p-4">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold dark:text-white">Inventory</h1>
+            <h1 className="text-2xl font-bold">Inventory</h1>
             <div className="flex flex-wrap gap-2">
               <Select 
                 value={statusFilter} 
@@ -300,11 +300,11 @@ export default function InventoryPage() {
 
           {/* Low Stock Alerts Card */}
           {!isLoadingLowStock && lowStockProducts.length > 0 && (
-            <Card className="mb-6 border-amber-200 dark:border-amber-700 dark:bg-gray-800">
+            <Card className="mb-6 border-amber-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-amber-500" />
-                  <span className="dark:text-white">Low Stock Alerts</span>
+                  <span>Low Stock Alerts</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>

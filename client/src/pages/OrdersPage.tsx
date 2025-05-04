@@ -174,7 +174,7 @@ export default function OrdersPage() {
   };
   
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-100 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       <div className={`${isMobileSidebarOpen ? 'block' : 'hidden'} md:block absolute md:relative z-10 h-full`}>
         <Sidebar
@@ -197,7 +197,7 @@ export default function OrdersPage() {
 
         <main className="flex-1 overflow-y-auto p-4">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold dark:text-white">Orders</h1>
+            <h1 className="text-2xl font-bold">Orders</h1>
             <div className="flex flex-wrap gap-2">
               <Select 
                 value={statusFilter} 
@@ -238,20 +238,20 @@ export default function OrdersPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : allOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">No orders found for this store</p>
+            <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-gray-300 bg-white p-6">
+              <p className="text-gray-500 mb-4">No orders found for this store</p>
               <Button onClick={() => setIsConnectModalOpen(true)}>
                 Connect Another Store
               </Button>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Order #</TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="cursor-pointer hover:bg-gray-50"
                       onClick={toggleSortDirection}
                     >
                       <div className="flex items-center gap-1">
